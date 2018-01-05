@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>How to use the JoiState entity</title>
+  <script src="../src/JoiCompute.js"></script>
+  <script src="../src/JoiState.js"></script>
+  <script src="../src/JoiPath.js"></script>
+
+  <script src="testReducers.js"></script>
+</head>
+<body>
+
+<script>
+  window.addEventListener("state-changed", function(ev) {
+    console.log(ev.detail);
+  });
+
+  const initialState = {
+    a: "a string"
+  };
+  Object.freeze(initialState);
+
+  let state = new JoiState(initialState);
+  state.bindReduce('state-test-one', TestFunctions.reducerOne, true);
+  state.bindCompute("_computeOne", TestFunctions.computeOne, ["a", "reducerOne"]);
+  state.bindObserve(TestFunctions.observeOne, ["_computeOne"]);
+
+  console.log(initialState);
+  window.dispatchEvent(new CustomEvent("state-test-one", {bubbles: true, composed: true, detail: "here we have testOne data"}));
+
+
+</script>
+
+</body>
+</html>
