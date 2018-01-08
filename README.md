@@ -3,6 +3,19 @@ Small ES6 state manager.
 JoiState can both produce, reduce, compute and observe a state. 
 The state consists only of a normal, immutable JS object.
 
+## How does JoiState work?
+JoiState works by:
+a) gathering all state data into a consistent, single, immutable object, and
+b) processing this state in 3 functional steps: reduce, compute, observe.
+
+All the in-memory information of your app in a single object. This object is immutable, so that every time a child or a child of a child in an object changes, a new object for this change will be created efficiently. This is nice, it gives you the ability to simply dirtycheck to see if something has changed, and it gives you easy access to other features such as atomic changes and state change history.
+
+When you want to change the state, you throw an event in the app and bind a reducer function to that event in the JoiState. When such an event is caught, the reducer function you have specified will take the previous state and the event detail of the event, and use this to change the state.
+
+After the reducer have changed the state, all the compute functions bound to the JoiState will run one by one. The compute functions listens for certain paths in the state, and will only produce a new output value if one or more of its arguments have changed. The compute functions automatically produce a preprocessed view of other parts of the state, so that you don't have to do the same preparation of state objects in several different reducers or in several different parts of the app.
+
+At last, the observers are run. Similar to the compute functions, the observers only run if the value of one or more of its observe functions have changed. The observers provide an excellent location to trigger async actions based on state changes, actions that should run in parallell with the normal update of the view.
+
 ## Why pursue JoiState?
 There are two types of apps: apps in a state of chaos, and apps with an ordered state. Now, of course, every app developer wants apps with an ordered state. And few developers make chaotic app states on purpose. Most app developer also follow some kind of strategy (backed by various libraries and authorative developer advocates) that they think will make their state ordered and safe. So why is the app state then a problem?
 
