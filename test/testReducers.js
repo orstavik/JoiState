@@ -1,7 +1,7 @@
 class TestFunctions {
 
   static reducerOne(state, detail) {
-    return JoiPath.setIn(state, ["reducerOne"], detail);
+    return JoiGraph.setIn(state, "reducerOne", detail);
   }
 
   static computeOne(a, testOne){

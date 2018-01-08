@@ -9,7 +9,6 @@ describe('test of JoiState', function () {
     const initialState = {
       a: "a string"
     };
-    Object.freeze(initialState);
 
     let state = new JoiState(initialState);
     state.bindReduce('state-test-one', TestFunctions.reducerOne, true);

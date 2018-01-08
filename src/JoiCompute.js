@@ -52,14 +52,14 @@ class JoiCompute {
         continue;
 
       //todo When we change the workingPoint, we can make a mark in a list which function has triggered a change.
-      workingPoint = JoiPath.setIn(workingPoint, ["functions", funcName, "argsValue"], newArgsValues);
+      workingPoint = JoiGraph.setIn(workingPoint, `functions.${funcName}.argsValue`, newArgsValues);
       let newComputedValue = func.apply(null, newArgsValues);
       if (observeOnly)
         continue;
       if (newComputedValue === funcObj.returnValue)    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
-      workingPoint = JoiPath.setIn(workingPoint, ["functions", funcName, "returnValue"], newComputedValue);      //todo, we are storing the returnValue in the function as well.. this is not necessary..
-      workingPoint = JoiPath.setIn(workingPoint, ["pathsCache", propName, "value"], newComputedValue);
+      workingPoint = JoiGraph.setIn(workingPoint, `functions.${funcName}.returnValue`, newComputedValue);      //todo, we are storing the returnValue in the function as well.. this is not necessary..
+      workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${propName}.value`, newComputedValue);
       return JoiCompute.__compute(stackRemainderCount, workingPoint, false).concat([workingPoint]);
     }
     return [workingPoint];
@@ -80,7 +80,7 @@ class JoiCompute {
   static copyAllTheNewCachedValuesIntoTheCurrentPropsState(state, pathsCache) {
     for (let pathString in pathsCache) {
       let pathValue = pathsCache[pathString];
-      state = JoiPath.setIn(state, pathValue.path, pathValue.value);
+      state = JoiGraph.setIn(state, pathString, pathValue.value);
     }
     return state;
   }
@@ -88,33 +88,35 @@ class JoiCompute {
 
 class PathRegister {
   constructor() {
-    this.register = [];
+    this.register = {};
   }
 
   getPathsCache(obj) {
     let res = {};
-    for (let path of this.register)
-      res[path] = {value: JoiPath.getIn(obj, path), path: path};
+    for (let path in this.register)
+      res[path] = {value: JoiGraph.getIn(obj, path), path: path};
     return res;
   }
 
-  getUnique(path) {
-    if (!Array.isArray(path) || path.length === 0)
-      throw new Error("Cannot use this as path in JoiState: " + path);
-    for (let pathB of this.register) {
-      if (path.length !== pathB.length)
-        continue;
-      if (path.every((path_i, i) => path_i === pathB[i]))
-        return pathB;
-    }
-    if (this.register[path])
-      throw new Error("Illegal path name! You have probably used a string with comma as a pathname somehow. " + path);
-    this.register.push(path);
-    return path;
-  }
-
+  // getUnique(path) {
+  //   // if (!Array.isArray(path) || path.length === 0)
+  //   //   throw new Error("Cannot use this as path in JoiState: " + path);
+  //   for (let pathB of this.register) {
+  //     if (path.length !== pathB.length)
+  //       continue;
+  //     if (path.every((path_i, i) => path_i === pathB[i]))
+  //       return pathB;
+  //   }
+  //   if (this.register[path])
+  //     throw new Error("Illegal path name! You have probably used a string with comma as a pathname somehow. " + path);
+  //   this.register.push(path);
+  //   return path;
+  // }
+  //
   getUniqueForString(path) {
-    const ar = path.split(".").map(p => p.trim());
-    return this.getUnique(ar);
+    this.register[path] = undefined;
+    return path;
+    // const ar = path.split(".").map(p => p.trim());
+    // return this.getUnique(ar);
   }
 }

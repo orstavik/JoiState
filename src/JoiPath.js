@@ -162,6 +162,10 @@ class JoiPath {
     return result;
   }
 
+  static setInStr(obj, path, value) {
+    return JoiPath.setIn(obj, JoiPath.strToArray(path), value);
+  }
+
   static setIn(obj, path, value) {
     const freeze = true;
     return JoiPath.getIn(obj, path) === value ? obj : JoiPath.setInNoCheck(obj, path, value, freeze);
@@ -344,7 +348,13 @@ class JoiPath {
       return res;
     return undefined;
   }
+
+  static strToArray(str) {
+    return JoiPath.pathCache[str] || (JoiPath.pathCache[str] = str.split("."));
+  }
 }
+
+JoiPath.pathCache = {};
 
 //todo use the filter method recursively to add, delete, update doc data in the objects as well.
 /*

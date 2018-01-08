@@ -6,7 +6,7 @@ class JoiState {
     this.computer = new JoiCompute(100, false);
     this.observer = new JoiCompute(0, true);
 
-    this.state = JoiPath.deepFreeze(initial);
+    this.state = JoiGraph.deepFreeze(initial);
     this.history = [];
     this.que = [];
     window.addEventListener("state-get-history", e => JoiState.emit("state-history-changed", this.history));     //this object will fire its history when queried.
