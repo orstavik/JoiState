@@ -48,8 +48,11 @@ class JoiState {
     const e = task.event;
     let startState = this.state;
     let reducedState = reducer(startState, e.detail);       //1. reduce
-    let computedState = this.computer.update(reducedState); //2. compute
-    this.observer.update(computedState);                    //3. observe
+    let computedState;
+    if(startState !== reducedState){
+      computedState = this.computer.update(reducedState); //2. compute
+      this.observer.update(computedState);                    //3. observe
+    }
     this.state = computedState;
     this.que.shift();
     const snapShot = JoiState._takeSnapshot(startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, startQueLength, this.que.splice());
