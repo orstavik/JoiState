@@ -287,11 +287,11 @@ class JoiPath {
   }
 
   static isNothing(A) {
-    return A === undefined || A === null || this.emptyObject(A);
+    return A === undefined || A === null || JoiPath.emptyObject(A);
   }
 
   static emptyObject(A) {
-    return A instanceof Object && Object.keys(A).length === 0;
+    return A instanceof Object && Object.keys(A).length === 0; //todo typeof???
   }
 
   //removes the

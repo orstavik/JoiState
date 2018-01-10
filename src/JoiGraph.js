@@ -137,6 +137,52 @@ class JoiGraph {
     return newObj;
   }
 
+  //returns an immutable copy of A with the branches of B either
+  // - merged (if they differ) or
+  // - nulled out in result (if B point null value).
+  //
+  //if either only B === null, then the branch will be deleted. (if the same criteria was set for A, it would be impossible to write in a new value for the same key later)
+  //if either A or B === undefined or {} (empty object), then the other branch is used.
+  /**
+   *
+   * @param A
+   * @param B
+   * @returns {Object} an immutable copy of A with B branches merged into it, or deleted if B branches contains null
+   */
+  static mergeDeepWithNullToDelete(A, B) {
+    const freeze = true;
+    if (B === null) return null;
+    if (B === undefined || JoiGraph.emptyObject(B))
+      return A;
+    if (A === undefined || JoiPath.emptyObject(A))
+      return B;
+    if (A === B)
+      return A;
+    if (!(A instanceof Object && B instanceof Object))
+      return B;
+
+    let C = Object.assign({}, A);
+    let hasMutated = false;
+    for (let key of Object.keys(B)) {
+      const a = A[key];
+      const b = B[key];
+      let c = JoiPath.mergeDeepWithNullToDelete(a, b, freeze);
+      if (c === a)
+        continue;
+      hasMutated = true;
+      if (c === null)
+        delete C[key];
+      else
+        C[key] = c; //null is also set as a value in C
+    }
+    if (!hasMutated)
+      return A;
+    if (Object.keys(C).length === 0)
+      return {};
+    return C;
+  }
+
+
   /**
    * Function that apply Object.freeze on
    * @param obj

@@ -1,0 +1,7 @@
+{
+  "name": "joistate",
+  "version": "0.0.1",
+  "description": "Enjoy a good state machine",
+  "author": "orstavik <intertext.no@gmail.com>",
+  "license": "MIT"
+}
