@@ -45,7 +45,7 @@ class JoiCompute {
       const func = funcObj.func;
       const propName = funcObj.returnPath;
       const argsValues = funcObj.argsValue;
-      const newArgsValues = funcObj.argsPaths.map(path => workingPoint.pathsCache[path].value);
+      const newArgsValues = funcObj.argsPaths.map(path => workingPoint.pathsCache[path]);
 
       const isEqual = argsValues.every((v, i) => v === newArgsValues[i]);
       if (isEqual)                      //none of the arguments have changed, then we do nothing.
@@ -59,7 +59,7 @@ class JoiCompute {
       if (newComputedValue === funcObj.returnValue)    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
       workingPoint = JoiGraph.setIn(workingPoint, `functions.${funcName}.returnValue`, newComputedValue);      //todo, we are storing the returnValue in the function as well.. this is not necessary..
-      workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${propName}.value`, newComputedValue);
+      workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${propName}`, newComputedValue);
       return JoiCompute.__compute(stackRemainderCount, workingPoint, false).concat([workingPoint]);
     }
     return [workingPoint];
@@ -78,10 +78,8 @@ class JoiCompute {
   }
 
   static copyAllTheNewCachedValuesIntoTheCurrentPropsState(state, pathsCache) {
-    for (let pathString in pathsCache) {
-      let pathValue = pathsCache[pathString];
-      state = JoiGraph.setIn(state, pathString, pathValue.value);
-    }
+    for (let pathString in pathsCache)
+      state = JoiGraph.setIn(state, pathString, pathsCache[pathString]);
     return state;
   }
 }
@@ -94,29 +92,12 @@ class PathRegister {
   getPathsCache(obj) {
     let res = {};
     for (let path in this.register)
-      res[path] = {value: JoiGraph.getIn(obj, path), path: path};
+      res[path] = JoiGraph.getIn(obj, path);
     return res;
   }
 
-  // getUnique(path) {
-  //   // if (!Array.isArray(path) || path.length === 0)
-  //   //   throw new Error("Cannot use this as path in JoiState: " + path);
-  //   for (let pathB of this.register) {
-  //     if (path.length !== pathB.length)
-  //       continue;
-  //     if (path.every((path_i, i) => path_i === pathB[i]))
-  //       return pathB;
-  //   }
-  //   if (this.register[path])
-  //     throw new Error("Illegal path name! You have probably used a string with comma as a pathname somehow. " + path);
-  //   this.register.push(path);
-  //   return path;
-  // }
-  //
   getUniqueForString(path) {
     this.register[path] = undefined;
     return path;
-    // const ar = path.split(".").map(p => p.trim());
-    // return this.getUnique(ar);
   }
 }
