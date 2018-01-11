@@ -123,10 +123,7 @@ describe('test confusable paths in computers/observers', function () {
     fireAndSetGlobalVariable2(reducerEventName, 2, "state-error", computeTestValue);
 
     let res = window[computeTestValue].toString();
-    console.log(res);
     expect(expectedErrorMsg).to.be.equal(res);
-    // expect(window.whatever_0).to.be.equal("21");
-    // expect(window.whatever_1).to.be.equal('{"b":2}9');
   });
 });
 
