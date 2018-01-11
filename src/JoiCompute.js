@@ -57,7 +57,8 @@ class JoiCompute {
       workingPoint = JoiGraph.setIn(workingPoint, `functionsLastRunRegister.${funcKey}`, workingPoint.pathsCache);
       if (observeOnly)
         continue;
-      if (newComputedValue === workingPoint.pathsCache[funcObj.returnPath])    //we changed the arguments, but the result didn't change.
+
+      if (JoiGraph.equals(newComputedValue, workingPoint.pathsCache[funcObj.returnPath]))    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
       workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${funcObj.returnPath}`, newComputedValue);
       return JoiCompute.__compute(stackRemainderCount, workingPoint, observeOnly).concat([workingPoint]);
