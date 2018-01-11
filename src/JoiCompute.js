@@ -1,3 +1,14 @@
+/**
+ * The JoiCompute is a virtual machine for both computing and/or observing functions.
+ * Both compute and observe functions should only run when the values of the argument paths that they
+ * are bound to changes.
+ *
+ * The state manager, such as JoiState, should use a separate JoiCompute for observers and computers.
+ * By keeping the observers in a separate container, the state manager can assure that the observers are only run once,
+ * after all the computed properties have updated. If not, an observer that listens for two or more computed properties
+ * could be called once or twice during each cycle, depending only on the sequence of adding the compute and observe
+ * functions, as it would be trigger after one computed parameter changes, or two computed parameters changes.
+ */
 class JoiCompute {
 
   constructor(maxStackSize) {
@@ -7,8 +18,6 @@ class JoiCompute {
     this.stack = [{}];
   }
 
-  //here we could reorder the functionsRegister so that the functions with fewest arguments are listed before the functions with more arguments,
-  //this could make the functions faster.
   bind(func, pathsAsStrings, returnName) {
     pathsAsStrings.map(path => this.pathRegister[path] = undefined);
     if (returnName)
@@ -21,22 +30,37 @@ class JoiCompute {
       argsPaths: pathsAsStrings,
       returnPath: returnName
     };
+    // a function below could be put in place sorting so that the functions with the most computed arguments are put last.
+    // this.functionsRegister = JoiCompute.sortFunctionsRegister(this.functionsRegister);
   }
 
-  //this.functionsRegister remember the last situation of the stack run, between updates(!),
-  //via argumentValues and returnValues of its functions. Not sure if that is a good thing..
-  //but we must have this "between update memory" to avoid running observers and computers when things do not change.
-  //the pathsCache is refreshed for every update.
-  update(newValue) {
-    let pathsCache = JoiGraph.getInAll(newValue, this.pathRegister);
+  /**
+   * this.stack[0] is the values of the last run. By checking the values from the last update,
+   * compute and observe functions with no paramaters changed since last reducer call are not run.
+   * This makes more sense for the developers writing reduce, compute and observe functions.
+   *
+   * @param newReducedState
+   * @returns {Object} newly computed state
+   */
+  update(newReducedState) {
+    let pathsCache = JoiGraph.getInAll(newReducedState, this.pathRegister);
     let perFuncPreviousPathsCache = {};
     for (let funKy in this.functionsRegister)
       perFuncPreviousPathsCache[funKy] = this.stack[0];
     this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache);
-    return JoiGraph.setInAll(newValue, this.stack[0]);
+    return JoiGraph.setInAll(newReducedState, this.stack[0]);
   }
 
-  //pathsCache is a mutable structure passed into __compute stack
+  //pathsCache is an immutable structure passed into __compute stack
+  /**
+   *
+   * @param functions
+   * @param stackRemainderCount
+   * @param pathsCache
+   * @param perFuncOldPathsCache
+   * @returns {*}
+   * @private
+   */
   static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
