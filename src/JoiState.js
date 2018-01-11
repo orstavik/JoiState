@@ -3,8 +3,8 @@ class JoiState {
   constructor(initial) {
     this.state = {};
     this.history = [];
-    this.computer = new JoiCompute(100, false);
-    this.observer = new JoiCompute(0, true);
+    this.computer = new JoiCompute(100);
+    this.observer = new JoiCompute(0);
 
     this.state = JoiGraph.deepFreeze(initial);
     this.history = [];

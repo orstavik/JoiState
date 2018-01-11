@@ -1,11 +1,10 @@
 class JoiCompute {
 
-  constructor(maxStackSize, observeOnly) {
+  constructor(maxStackSize) {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
     this.functionsLastRunRegister = {};
     this.pathRegister = {};
-    this.observeOnly = observeOnly;
     this.stack = [];
     this.previousState = {};
   }
@@ -14,7 +13,7 @@ class JoiCompute {
   //this could make the functions faster.
   bind(func, pathsAsStrings, returnName) {
     pathsAsStrings.map(path => this.pathRegister[path] = undefined);
-    if (!this.observeOnly)
+    if (returnName)
       this.pathRegister[returnName] = undefined;
 
     let funKy = returnName + " = " + func.name + "(" + pathsAsStrings.join(", ") + ")";
@@ -36,13 +35,13 @@ class JoiCompute {
     let functionsLastRunRegister = {};
     for (let funKy in this.functionsRegister)
       functionsLastRunRegister[funKy] = this.previousState;
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, functionsLastRunRegister, this.observeOnly);
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, functionsLastRunRegister);
     this.previousState = this.stack[0];
     return JoiGraph.setInAll(newValue, this.stack[0]);
   }
 
   //pathsCache is a mutable structure passed into __compute stack
-  static __compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister, observeOnly) {
+  static __compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
     for (let funcKey in functions) {
@@ -55,14 +54,16 @@ class JoiCompute {
       const newArgsValues = funcObj.argsPaths.map(path => pathsCache[path]);
       let newComputedValue = funcObj.func.apply(null, newArgsValues);
 
-      functionsLastRunRegister = JoiGraph.setIn(functionsLastRunRegister, funcKey, pathsCache);
-      if (observeOnly)
+      functionsLastRunRegister = Object.assign({}, functionsLastRunRegister);           //todo not necessary now..
+      functionsLastRunRegister[funcKey] = pathsCache;
+      if (!funcObj.returnPath)
         continue;
 
       if (JoiGraph.equals(newComputedValue, pathsCache[funcObj.returnPath]))    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
-      pathsCache = JoiGraph.setIn(pathsCache, funcObj.returnPath, newComputedValue);
-      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister, observeOnly).concat([pathsCache]);
+      pathsCache = Object.assign({}, pathsCache);                                       //todo not necessary now..
+      pathsCache[funcObj.returnPath] = newComputedValue;
+      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister).concat([pathsCache]);
     }
     return [pathsCache];
   }
