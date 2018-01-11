@@ -48,7 +48,11 @@ class JoiGraph {
       return true;
     if (!JoiGraph.instanceofObject(A) || !JoiGraph.instanceofObject(B))
       return false;
-    for (let key of Object.getOwnPropertyNames(A)) {
+    let aProps = Object.getOwnPropertyNames(A);
+    let bProps = Object.getOwnPropertyNames(B);
+    if (aProps.length !== bProps.length)
+      return false;
+    for (let key of aProps) {
       if (!Object.hasOwnProperty.call(B, key) || !JoiGraph.equals(A[key], B[key]))
         return false;
     }
