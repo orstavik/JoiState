@@ -15,7 +15,7 @@ class JoiCompute {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
     this.pathRegister = {};
-    this.stack = [{}];
+    this.stack = [{functionsRun:[], pathsCache: {}}];
   }
 
   bind(func, pathsAsStrings, returnName) {
@@ -46,9 +46,9 @@ class JoiCompute {
     let pathsCache = JoiGraph.getInAll(newReducedState, this.pathRegister);
     let perFuncPreviousPathsCache = {};
     for (let funKy of Object.getOwnPropertyNames(this.functionsRegister))
-      perFuncPreviousPathsCache[funKy] = this.stack[0];
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache);
-    return JoiGraph.setInAll(newReducedState, this.stack[0]);
+      perFuncPreviousPathsCache[funKy] = this.stack[0].pathsCache;
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, []);
+    return JoiGraph.setInAll(newReducedState, this.stack[0].pathsCache);
   }
 
   /**
@@ -57,12 +57,14 @@ class JoiCompute {
    * @param stackRemainderCount
    * @param pathsCache              immutable
    * @param perFuncOldPathsCache    immutable
+   * @param stack
    * @returns {Object[]} all the pathsCache, the full stack.
    * @private
    */
-  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache) {
+  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
+    let functionsRun = [];
     for (let funKy of Object.getOwnPropertyNames(functions)) {
       const funcObj = functions[funKy];
 
@@ -76,6 +78,7 @@ class JoiCompute {
         continue;
       }
 
+      functionsRun.push(funcObj);
       let newComputedValue = funcObj.func.apply(null, argValues);
 
       perFuncOldPathsCache = Object.assign({}, perFuncOldPathsCache);
@@ -87,9 +90,11 @@ class JoiCompute {
         continue;                                      
       pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
-      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache).concat([pathsCache]);
+      const temporaryResult = [{functionsRun, pathsCache}].concat(stack);
+      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, temporaryResult);
     }
-    return [pathsCache];
+    let finalResult = {functionsRun, pathsCache};
+    return [finalResult];
   }
 
   static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, pathToValueNow, pathToValueBefore) {
