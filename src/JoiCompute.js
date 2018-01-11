@@ -11,15 +11,17 @@ class JoiCompute {
   //here we could reorder the functionsRegister so that the functions with fewest arguments are listed before the functions with more arguments,
   //this could make the functions faster.
   bind(func, pathsAsStrings, returnName) {
+    pathsAsStrings.map(path => this.pathRegister[path] = undefined);
     const res = {
       func: func,
       funcName: func.name,
-      argsPaths: pathsAsStrings.map(path => JoiCompute.getUniqueForString(path, this.pathRegister)),
+      argsPaths: pathsAsStrings,
       argsValue: pathsAsStrings.map(p => undefined)
     };
     if (this.observeOnly)
       return this.functionsRegister[func.name] = res;
-    res.returnPath = JoiCompute.getUniqueForString(returnName, this.pathRegister);
+    this.pathRegister[returnName] = undefined;
+    res.returnPath = returnName;
     res.returnValue = undefined;
     return this.functionsRegister[returnName] = res;
   }
@@ -29,7 +31,7 @@ class JoiCompute {
   //but we must have this "between update memory" to avoid running observers and computers when things do not change.
   //the pathsCache is refreshed for every update.
   update(newValue) {
-    const start = {functions: this.functionsRegister, pathsCache: JoiCompute.getPathsCache(newValue, this.pathRegister)};
+    const start = {functions: this.functionsRegister, pathsCache: JoiCompute.getValuesForPaths(newValue, this.pathRegister)};
     this.stack = JoiCompute.__compute(this.maxStackSize, start, this.observeOnly);
     this.functionsRegister = this.stack[0].functions;
     return JoiCompute.copyAllTheNewCachedValuesIntoTheCurrentPropsState(newValue, this.stack[0].pathsCache);
@@ -83,15 +85,10 @@ class JoiCompute {
     return state;
   }
 
-  static getPathsCache(obj, register) {
+  static getValuesForPaths(obj, paths) {
     let res = {};
-    for (let path in register)
+    for (let path in paths)
       res[path] = JoiGraph.getIn(obj, path);
     return res;
-  }
-
-  static getUniqueForString(path, register) {
-    register[path] = undefined;
-    return path;
   }
 }
