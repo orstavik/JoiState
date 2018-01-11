@@ -78,8 +78,8 @@ class JoiState {
       computedState,
       newState,
       task,
-      computerInfo: computerInfo.getStartStopRegisters(),
-      observerInfo: observerInfo.getStartStopRegisters(),
+      computerInfo: computerInfo.functionsRegister,
+      observerInfo: observerInfo.functionsRegister,
       startQueLength,
       que
     };

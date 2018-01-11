@@ -35,9 +35,9 @@ describe('test of JoiState', function () {
       expect(ev.detail).to.deep.equal(
         {
           a: "a string",
-          reducerOne: "reduceData",
-          _computeOne: "a stringreduceData",
-          _computeTwo: "a stringreduceData|a string"
+          reducerOne: "reduceData2",
+          _computeOne: "a stringreduceData2",
+          _computeTwo: "a stringreduceData2|a string"
         }
       );
       window.removeEventListener("state-changed", cb);
@@ -47,7 +47,7 @@ describe('test of JoiState', function () {
     window.dispatchEvent(new CustomEvent("state-test-one", {
       bubbles: true,
       composed: true,
-      detail: "reduceData"
+      detail: "reduceData2"
     }));
   });
 

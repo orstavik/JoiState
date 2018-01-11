@@ -3,6 +3,7 @@ class JoiCompute {
   constructor(maxStackSize, observeOnly) {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
+    this.functionsLastRunRegister = {};
     this.pathRegister = {};
     this.observeOnly = observeOnly;
     this.stack = [];
@@ -12,18 +13,16 @@ class JoiCompute {
   //this could make the functions faster.
   bind(func, pathsAsStrings, returnName) {
     pathsAsStrings.map(path => this.pathRegister[path] = undefined);
+    if (!this.observeOnly)
+      this.pathRegister[returnName] = undefined;
     const res = {
       func: func,
       funcName: func.name,
       argsPaths: pathsAsStrings,
-      argsValue: pathsAsStrings.map(p => undefined)
+      returnPath: returnName
     };
-    if (this.observeOnly)
-      return this.functionsRegister[func.name] = res;
-    this.pathRegister[returnName] = undefined;
-    res.returnPath = returnName;
-    res.returnValue = undefined;
-    return this.functionsRegister[returnName] = res;
+    this.functionsLastRunRegister[res.returnPath + res.funcName] = {};
+    this.functionsRegister[res.returnPath + res.funcName] = res;
   }
 
   //this.functionsRegister remember the last situation of the stack run, between updates(!),
@@ -31,38 +30,37 @@ class JoiCompute {
   //but we must have this "between update memory" to avoid running observers and computers when things do not change.
   //the pathsCache is refreshed for every update.
   update(newValue) {
-    const start = {functions: this.functionsRegister, pathsCache: JoiCompute.getValuesForPaths(newValue, this.pathRegister)};
+    const start = {
+      functions: this.functionsRegister,
+      pathsCache: JoiCompute.getInAll(newValue, this.pathRegister),
+      functionsLastRunRegister : this.functionsLastRunRegister
+    };
     this.stack = JoiCompute.__compute(this.maxStackSize, start, this.observeOnly);
-    this.functionsRegister = this.stack[0].functions;
-    return JoiCompute.copyAllTheNewCachedValuesIntoTheCurrentPropsState(newValue, this.stack[0].pathsCache);
+    this.functionsLastRunRegister = this.stack[0].functionsLastRunRegister;
+    return JoiCompute.setInAll(newValue, this.stack[0].pathsCache);
   }
 
   //pathsCache is a mutable structure passed into __compute stack
-  static __compute(stackRemainderCount, startingPoint, observeOnly) {
+  static __compute(stackRemainderCount, workingPoint, observeOnly) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
-    let workingPoint = startingPoint;
-    for (let funcName in workingPoint.functions) {
-      const funcObj = workingPoint.functions[funcName];
-      const func = funcObj.func;
-      const propName = funcObj.returnPath;
-      const argsValues = funcObj.argsValue;
-      const newArgsValues = funcObj.argsPaths.map(path => workingPoint.pathsCache[path]);
+    for (let funcKey in workingPoint.functions) {
+      const funcObj = workingPoint.functions[funcKey];       //this is a this.functionsRegister copy that never change
+      const prevPathsCache = workingPoint.functionsLastRunRegister[funcKey];
 
-      const isEqual = argsValues.every((v, i) => v === newArgsValues[i]);
+      const isEqual = funcObj.argsPaths.every(path => prevPathsCache[path] === workingPoint.pathsCache[path]);
       if (isEqual)                      //none of the arguments have changed, then we do nothing.
         continue;
+      const newArgsValues = funcObj.argsPaths.map(path => workingPoint.pathsCache[path]);
+      let newComputedValue = funcObj.func.apply(null, newArgsValues);
 
-      //todo When we change the workingPoint, we can make a mark in a list which function has triggered a change.
-      workingPoint = JoiGraph.setIn(workingPoint, `functions.${funcName}.argsValue`, newArgsValues);
-      let newComputedValue = func.apply(null, newArgsValues);
+      workingPoint = JoiGraph.setIn(workingPoint, `functionsLastRunRegister.${funcKey}`, workingPoint.pathsCache);
       if (observeOnly)
         continue;
-      if (newComputedValue === funcObj.returnValue)    //we changed the arguments, but the result didn't change.
+      if (newComputedValue === workingPoint.pathsCache[funcObj.returnPath])    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
-      workingPoint = JoiGraph.setIn(workingPoint, `functions.${funcName}.returnValue`, newComputedValue);      //todo, we are storing the returnValue in the function as well.. this is not necessary..
-      workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${propName}`, newComputedValue);
-      return JoiCompute.__compute(stackRemainderCount, workingPoint, false).concat([workingPoint]);
+      workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${funcObj.returnPath}`, newComputedValue);
+      return JoiCompute.__compute(stackRemainderCount, workingPoint, observeOnly).concat([workingPoint]);
     }
     return [workingPoint];
   }
@@ -75,17 +73,13 @@ class JoiCompute {
       "Tip: Even if it is not an infinite loop, you should still simplify your compute structure.");
   }
 
-  getStartStopRegisters() {
-    return {start: this.stack[this.stack.length - 1].functions, stop: this.stack[0].functions};
-  }
-
-  static copyAllTheNewCachedValuesIntoTheCurrentPropsState(state, pathsCache) {
-    for (let pathString in pathsCache)
-      state = JoiGraph.setIn(state, pathString, pathsCache[pathString]);
+  static setInAll(state, pathsWithValues) {
+    for (let pathString in pathsWithValues)
+      state = JoiGraph.setIn(state, pathString, pathsWithValues[pathString]);
     return state;
   }
 
-  static getValuesForPaths(obj, paths) {
+  static getInAll(obj, paths) {
     let res = {};
     for (let path in paths)
       res[path] = JoiGraph.getIn(obj, path);
