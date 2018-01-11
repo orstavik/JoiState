@@ -32,12 +32,12 @@ class JoiCompute {
   update(newValue) {
     const start = {
       functions: this.functionsRegister,
-      pathsCache: JoiCompute.getInAll(newValue, this.pathRegister),
+      pathsCache: JoiGraph.getInAll(newValue, this.pathRegister),
       functionsLastRunRegister : this.functionsLastRunRegister
     };
     this.stack = JoiCompute.__compute(this.maxStackSize, start, this.observeOnly);
     this.functionsLastRunRegister = this.stack[0].functionsLastRunRegister;
-    return JoiCompute.setInAll(newValue, this.stack[0].pathsCache);
+    return JoiGraph.setInAll(newValue, this.stack[0].pathsCache);
   }
 
   //pathsCache is a mutable structure passed into __compute stack
@@ -71,18 +71,5 @@ class JoiCompute {
     throw new Error(
       "StackOverFlowError in JoiCompute (JoiState). Probably an infinite loop.\n " +
       "Tip: Even if it is not an infinite loop, you should still simplify your compute structure.");
-  }
-
-  static setInAll(state, pathsWithValues) {
-    for (let pathString in pathsWithValues)
-      state = JoiGraph.setIn(state, pathString, pathsWithValues[pathString]);
-    return state;
-  }
-
-  static getInAll(obj, paths) {
-    let res = {};
-    for (let path in paths)
-      res[path] = JoiGraph.getIn(obj, path);
-    return res;
   }
 }

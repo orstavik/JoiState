@@ -60,6 +60,13 @@ class JoiGraph {
   }
 
 
+  static getInAll(obj, objWithPaths) {
+    let res = {};
+    for (let path in objWithPaths)
+      res[path] = JoiGraph.getIn(obj, path);
+    return res;
+  }
+
   /**
    * @returns {*} the value in the object at the given path, or undefined
    */
@@ -104,6 +111,12 @@ class JoiGraph {
     let newObj = Object.assign(Object.create(null, {}), obj);
     newObj[path[0]] = newChild;
     return newObj;
+  }
+
+  static setInAll(obj, pathsWithValues) {
+    for (let pathString in pathsWithValues)
+      obj = JoiGraph.setIn(obj, pathString, pathsWithValues[pathString]);
+    return obj;
   }
 
   /**
