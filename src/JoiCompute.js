@@ -31,21 +31,20 @@ class JoiCompute {
   //the pathsCache is refreshed for every update.
   update(newValue) {
     const start = {
-      functions: this.functionsRegister,
       pathsCache: JoiGraph.getInAll(newValue, this.pathRegister),
       functionsLastRunRegister : this.functionsLastRunRegister
     };
-    this.stack = JoiCompute.__compute(this.maxStackSize, start, this.observeOnly);
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, start, this.observeOnly);
     this.functionsLastRunRegister = this.stack[0].functionsLastRunRegister;
     return JoiGraph.setInAll(newValue, this.stack[0].pathsCache);
   }
 
   //pathsCache is a mutable structure passed into __compute stack
-  static __compute(stackRemainderCount, workingPoint, observeOnly) {
+  static __compute(functions, stackRemainderCount, workingPoint, observeOnly) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
-    for (let funcKey in workingPoint.functions) {
-      const funcObj = workingPoint.functions[funcKey];       //this is a this.functionsRegister copy that never change
+    for (let funcKey in functions) {
+      const funcObj = functions[funcKey];       //this is a this.functionsRegister copy that never change
       const prevPathsCache = workingPoint.functionsLastRunRegister[funcKey];
 
       const isEqual = funcObj.argsPaths.every(path => prevPathsCache[path] === workingPoint.pathsCache[path]);
@@ -61,7 +60,7 @@ class JoiCompute {
       if (JoiGraph.equals(newComputedValue, workingPoint.pathsCache[funcObj.returnPath]))    //we changed the arguments, but the result didn't change.
         continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
       workingPoint = JoiGraph.setIn(workingPoint, `pathsCache.${funcObj.returnPath}`, newComputedValue);
-      return JoiCompute.__compute(stackRemainderCount, workingPoint, observeOnly).concat([workingPoint]);
+      return JoiCompute.__compute(functions, stackRemainderCount, workingPoint, observeOnly).concat([workingPoint]);
     }
     return [workingPoint];
   }
