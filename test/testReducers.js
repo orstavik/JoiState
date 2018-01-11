@@ -8,7 +8,11 @@ class TestFunctions {
     return a + testOne;
   }
 
+  static computeTwo(_computeOne, a){
+    return _computeOne + "|"+ a;
+  }
+
   static observeOne(prop){
-    console.log("The following prop has changed: ", prop);
+    window.computeTwoTestValue = prop;
   }
 }

@@ -49,11 +49,11 @@ class JoiState {
     let startState = this.state;
     let reducedState = reducer(startState, e.detail);       //1. reduce
     let computedState;
-    if(startState !== reducedState){
+    if(startState !== reducedState){                                                 //todo we need a try catch around compute so to make a good error message
       computedState = this.computer.update(reducedState); //2. compute
       this.observer.update(computedState);                    //3. observe
+      this.state = computedState;
     }
-    this.state = computedState;
     this.que.shift();
     const snapShot = JoiState._takeSnapshot(startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, startQueLength, this.que.splice());
     this.history = [snapShot].concat(this.history);
