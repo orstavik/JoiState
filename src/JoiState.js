@@ -9,7 +9,7 @@ class JoiState {
     this.state = JoiGraph.deepFreeze(initial);
     this.history = [];
     this.que = [];
-    window.addEventListener("state-get-history", e => JoiState.emit("state-history-changed", this.history));     //this object will fire its history when queried.
+    window.addEventListener("state-get-history", e => JoiState.emit("state-history-changed", this.history));     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
   bindReduce(eventName, reducer, throttle = true) {

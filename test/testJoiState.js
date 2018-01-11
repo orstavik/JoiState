@@ -1,77 +1,82 @@
+/**
+ * this function
+ * 1) adds a one time listener for the state-changed event,
+ * 2) it takes the state (detail) coming from this event and sets it as a global variable on window
+ * 3) it the fires an event that is supposed to trigger the state with the eventData
+ * @param eventName
+ * @param eventData
+ */
+const fireAndSetGlobalVariable = function (eventName, eventData, outputName) {
+  const cb = function (ev) {
+    window[outputName] = ev.detail;
+    window.removeEventListener("state-changed", cb);
+  };
+  window.addEventListener("state-changed", cb);
+  window.dispatchEvent(new CustomEvent(eventName, {bubbles: true, composed: true, detail: eventData}));
+};
+
+
 describe('test of JoiState', function () {
 
-  const state = new JoiState(
-    {
-      a: "a string"
-    }
-  );
+  const reducerEventName = 'state-test-one';
+  const startState = {
+    a: "a string"
+  };
+  const state = new JoiState(startState);
 
   it("new JoiState", function () {
     expect(state.state).to.deep.equal({a: "a string"});
   });
 
   it("reducer", function () {
-    state.bindReduce('state-test-one', TestFunctions.reducerOne, true);
 
-    const cb = function (ev) {
-      expect(ev.detail).to.deep.equal({a: "a string", reducerOne: "reduceData"});
-      window.removeEventListener("state-changed", cb);
-      delete self["state"];
+    const reducerOne = function (state, detail) {
+      return JoiGraph.setIn(state, "reducerOne", detail);
     };
-    window.addEventListener("state-changed", cb);
+    state.bindReduce(reducerEventName, reducerOne, true);
+    fireAndSetGlobalVariable(reducerEventName, "reduceData", "computeTestValue1");
 
-    window.dispatchEvent(new CustomEvent("state-test-one", {
-      bubbles: true,
-      composed: true,
-      detail: "reduceData"
-    }));
+    const testValue = {a: "a string", reducerOne: "reduceData"};
+    expect(window["computeTestValue1"]).to.deep.equal(testValue);
   });
 
   it("two computes", function () {
-    state.bindCompute("_computeOne", TestFunctions.computeOne, ["a", "reducerOne"]);
-    state.bindCompute("_computeTwo", TestFunctions.computeTwo, ["_computeOne", "a"]);
-
-    const cb = function (ev) {
-      expect(ev.detail).to.deep.equal(
-        {
-          a: "a string",
-          reducerOne: "reduceData2",
-          _computeOne: "a stringreduceData2",
-          _computeTwo: "a stringreduceData2|a string"
-        }
-      );
-      window.removeEventListener("state-changed", cb);
+    const computeOne = function (a, testOne) {
+      return a + testOne;
     };
-    window.addEventListener("state-changed", cb);
 
-    window.dispatchEvent(new CustomEvent("state-test-one", {
-      bubbles: true,
-      composed: true,
-      detail: "reduceData2"
-    }));
+    const computeTwo = function (_computeOne, a) {
+      return _computeOne + "|" + a;
+    };
+
+    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
+    state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
+
+    let testValue = {
+      a: "a string",
+      reducerOne: "reduceData2",
+      _computeOne: "a stringreduceData2",
+      _computeTwo: "a stringreduceData2|a string"
+    };
+
+    fireAndSetGlobalVariable(reducerEventName, "reduceData2", "computeTestValue1");
+    expect(window["computeTestValue1"]).to.deep.equal(testValue);
   });
 
   it("observer", function () {
-    state.bindObserve(TestFunctions.observeOne, ["_computeTwo"]);
-
-    const cb = function (ev) {
-      expect(ev.detail).to.deep.equal(
-        {
-          a: "a string",
-          reducerOne: "reduceData",
-          _computeOne: "a stringreduceData",
-          _computeTwo: "a stringreduceData|a string"
-        }
-      );
-      expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-      window.removeEventListener("state-changed", cb);
+    const observeOne = function (prop) {
+      window.computeTwoTestValue = prop;
     };
-    window.addEventListener("state-changed", cb);
+    state.bindObserve(observeOne, ["_computeTwo"]);
+    let testValue = {
+      a: "a string",
+      reducerOne: "reduceData",
+      _computeOne: "a stringreduceData",
+      _computeTwo: "a stringreduceData|a string"
+    };
 
-    window.dispatchEvent(new CustomEvent("state-test-one", {
-      bubbles: true,
-      composed: true,
-      detail: "reduceData"
-    }));
+    fireAndSetGlobalVariable(reducerEventName, "reduceData", "computeTestValue1");
+    expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
+    expect(window["computeTestValue1"]).to.deep.equal(testValue);
   });
 });

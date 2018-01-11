@@ -2,35 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>How to use the JoiState entity</title>
-  <script src="../src/JoiCompute.js"></script>
-  <script src="../src/JoiState.js"></script>
-  <script src="../src/JoiPath.js"></script>
-
-  <script src="testReducers.js"></script>
+  <title>Test Of JoiPath</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.1.0/mocha.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.1.0/mocha.min.css">
 </head>
 <body>
 
+<!--<style>#mocha .test a.replay { display: none }</style>-->
+<div id="mocha">Mocha</div>
+
 <script>
-  window.addEventListener("state-changed", function(ev) {
-    console.log(ev.detail);
-  });
-
-  const initialState = {
-    a: "a string"
-  };
-  Object.freeze(initialState);
-
-  let state = new JoiState(initialState);
-  state.bindReduce('state-test-one', TestFunctions.reducerOne, true);
-  state.bindCompute("_computeOne", TestFunctions.computeOne, ["a", "reducerOne"]);
-  state.bindObserve(TestFunctions.observeOne, ["_computeOne"]);
-
-  console.log(initialState);
-  window.dispatchEvent(new CustomEvent("state-test-one", {bubbles: true, composed: true, detail: "here we have testOne data"}));
-
-
+  mocha.setup('bdd');
+  var assert = chai.assert;
+  var expect = chai.expect;
+  var should = chai.should();
 </script>
+
+<script src="../src/JoiCompute.js"></script>
+<script src="../src/JoiState.js"></script>
+<script src="../src/JoiGraph.js"></script>
+
+<script src="testJoiPath.js"></script>
+<script src="testJoiState.js"></script>
+
+<script>
+  mocha.run();
+</script>
+
 
 </body>
 </html>
