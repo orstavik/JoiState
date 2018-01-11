@@ -3,10 +3,8 @@ class JoiCompute {
   constructor(maxStackSize) {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
-    this.functionsLastRunRegister = {};
     this.pathRegister = {};
-    this.stack = [];
-    this.previousState = {};
+    this.stack = [{}];
   }
 
   //here we could reorder the functionsRegister so that the functions with fewest arguments are listed before the functions with more arguments,
@@ -17,7 +15,6 @@ class JoiCompute {
       this.pathRegister[returnName] = undefined;
 
     let funKy = returnName + " = " + func.name + "(" + pathsAsStrings.join(", ") + ")";
-    this.functionsLastRunRegister[funKy] = {};
     this.functionsRegister[funKy] = {
       func: func,
       funcName: func.name,
@@ -32,35 +29,34 @@ class JoiCompute {
   //the pathsCache is refreshed for every update.
   update(newValue) {
     let pathsCache = JoiGraph.getInAll(newValue, this.pathRegister);
-    let functionsLastRunRegister = {};
+    let perFuncPreviousPathsCache = {};
     for (let funKy in this.functionsRegister)
-      functionsLastRunRegister[funKy] = this.previousState;
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, functionsLastRunRegister);
-    this.previousState = this.stack[0];
+      perFuncPreviousPathsCache[funKy] = this.stack[0];
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache);
     return JoiGraph.setInAll(newValue, this.stack[0]);
   }
 
   //pathsCache is a mutable structure passed into __compute stack
-  static __compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister) {
+  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
     for (let funcKey in functions) {
       const funcObj = functions[funcKey];
 
-      let previousPathsCache = functionsLastRunRegister[funcKey];
+      let previousPathsCache = perFuncOldPathsCache[funcKey];
       if (previousPathsCache === pathsCache)        //funcObj has been run on the exact same paths
         continue;
 
       const argValues = JoiCompute.getChangedArgumentsOrNullIfNoneHasChanged(funcObj.argsPaths, pathsCache, previousPathsCache)
       if (!argValues){                            //none of the arguments have changed, then we do nothing.
-        functionsLastRunRegister[funcKey] = pathsCache;
+        perFuncOldPathsCache[funcKey] = pathsCache;
         continue;
       }
 
       let newComputedValue = funcObj.func.apply(null, argValues);
 
-      functionsLastRunRegister = Object.assign({}, functionsLastRunRegister);
-      functionsLastRunRegister[funcKey] = pathsCache;
+      perFuncOldPathsCache = Object.assign({}, perFuncOldPathsCache);
+      perFuncOldPathsCache[funcKey] = pathsCache;
       if (!funcObj.returnPath)
         continue;
 
@@ -68,7 +64,7 @@ class JoiCompute {
         continue;                                      
       pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
-      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister).concat([pathsCache]);
+      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache).concat([pathsCache]);
     }
     return [pathsCache];
   }
