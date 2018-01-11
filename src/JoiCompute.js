@@ -3,7 +3,7 @@ class JoiCompute {
   constructor(maxStackSize, observeOnly) {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
-    this.pathRegister = new PathRegister();
+    this.pathRegister = {};
     this.observeOnly = observeOnly;
     this.stack = [];
   }
@@ -14,12 +14,12 @@ class JoiCompute {
     const res = {
       func: func,
       funcName: func.name,
-      argsPaths: pathsAsStrings.map(path => this.pathRegister.getUniqueForString(path)),
+      argsPaths: pathsAsStrings.map(path => JoiCompute.getUniqueForString(path, this.pathRegister)),
       argsValue: pathsAsStrings.map(p => undefined)
     };
     if (this.observeOnly)
       return this.functionsRegister[func.name] = res;
-    res.returnPath = this.pathRegister.getUniqueForString(returnName);
+    res.returnPath = JoiCompute.getUniqueForString(returnName, this.pathRegister);
     res.returnValue = undefined;
     return this.functionsRegister[returnName] = res;
   }
@@ -29,7 +29,7 @@ class JoiCompute {
   //but we must have this "between update memory" to avoid running observers and computers when things do not change.
   //the pathsCache is refreshed for every update.
   update(newValue) {
-    const start = {functions: this.functionsRegister, pathsCache: this.pathRegister.getPathsCache(newValue)};
+    const start = {functions: this.functionsRegister, pathsCache: JoiCompute.getPathsCache(newValue, this.pathRegister)};
     this.stack = JoiCompute.__compute(this.maxStackSize, start, this.observeOnly);
     this.functionsRegister = this.stack[0].functions;
     return JoiCompute.copyAllTheNewCachedValuesIntoTheCurrentPropsState(newValue, this.stack[0].pathsCache);
@@ -74,7 +74,7 @@ class JoiCompute {
   }
 
   getStartStopRegisters() {
-    return {start: this.stack[this.stack.length-1].functions, stop: this.stack[0].functions};
+    return {start: this.stack[this.stack.length - 1].functions, stop: this.stack[0].functions};
   }
 
   static copyAllTheNewCachedValuesIntoTheCurrentPropsState(state, pathsCache) {
@@ -82,22 +82,16 @@ class JoiCompute {
       state = JoiGraph.setIn(state, pathString, pathsCache[pathString]);
     return state;
   }
-}
 
-class PathRegister {
-  constructor() {
-    this.register = {};
-  }
-
-  getPathsCache(obj) {
+  static getPathsCache(obj, register) {
     let res = {};
-    for (let path in this.register)
+    for (let path in register)
       res[path] = JoiGraph.getIn(obj, path);
     return res;
   }
 
-  getUniqueForString(path) {
-    this.register[path] = undefined;
+  static getUniqueForString(path, register) {
+    register[path] = undefined;
     return path;
   }
 }
