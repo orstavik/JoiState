@@ -14,3 +14,12 @@ const fireAndSetGlobalVariable = function (eventName, eventData, outputName) {
   window.addEventListener("state-changed", cb);
   window.dispatchEvent(new CustomEvent(eventName, {bubbles: true, composed: true, detail: eventData}));
 };
+
+const fireAndSetGlobalVariable2 = function (fireEventName, eventData, listenEventName, outputName) {
+  const cb = function (ev) {
+    window[outputName] = ev.detail;
+    window.removeEventListener(listenEventName, cb);
+  };
+  window.addEventListener(listenEventName, cb);
+  window.dispatchEvent(new CustomEvent(fireEventName, {bubbles: true, composed: true, detail: eventData}));
+};

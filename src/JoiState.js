@@ -48,31 +48,38 @@ class JoiState {
     const e = task.event;
     let startState = this.state;
     let reducedState = reducer(startState, e.detail);         //1. reduce
-    let computedState;
+    let computedState, error;
     if (startState !== reducedState) {
-      computedState = this.computer.update(reducedState);     //2. compute
-      this.observer.update(computedState);                    //3. observe
-      this.state = computedState;
+      try {
+        computedState = this.computer.update(reducedState);     //2. compute
+        this.observer.update(computedState);                    //3. observe
+        this.state = computedState;
+      } catch (err) {
+        error = err;
+      }
     }
     this.que.shift();
-    const snapShot = JoiState._takeSnapshot(startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, startQueLength, this.que.splice());
+    const snapShot = JoiState._takeSnapshot(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, startQueLength, this.que.splice());
     this.history = [snapShot].concat(this.history);
-    // if (this.history.length > 100)
-    //   this.history.slice(0,50);
-    JoiState.emit("state-changed", this.state);
+    // if (this.history.length > 100) this.history = this.history.slice(0,50);
+    if (error){
+      JoiState.emit("state-error", error);
+    } else {
+      JoiState.emit("state-changed", this.state);
+    }
     JoiState.emit("state-history-changed", this.history);
-    // if (this.que.length > 100)
-    //   setTimeout(()=> this.reduceComputeObserveInner(this.que[0]), 0);
+    // if (this.que.length > 100) setTimeout(()=> this.reduceComputeObserveInner(this.que[0]), 0);
     if (this.que.length > 0)
       this.reduceComputeObserveInner(this.que[0]);
   }
 
-  static _takeSnapshot(startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, startQueLength, que) {
+  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, startQueLength, que) {
     task.taskName = task.reducer.name;
     task.event = {type: event.type, detail: event.detail};
     task.start = start;
     task.stop = performance.now();
     return {
+      error,
       startState,
       reducedState,
       computedState,

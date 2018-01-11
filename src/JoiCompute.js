@@ -15,7 +15,7 @@ class JoiCompute {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
     this.pathRegister = {};
-    this.stack = [{functionsRun:[], pathsCache: {}}];
+    this.stack = [{functionsRun: [], pathsCache: {}}];
   }
 
   bind(func, pathsAsStrings, returnName) {
@@ -25,6 +25,7 @@ class JoiCompute {
 
     let funKy = returnName + " = " + func.name + "(" + pathsAsStrings.join(", ") + ")";
     this.functionsRegister[funKy] = {
+      funKy,
       func: func,
       funcName: func.name,
       argsPaths: pathsAsStrings,
@@ -62,7 +63,7 @@ class JoiCompute {
    * @private
    */
   static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack) {
-    stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
+    JoiCompute.checkStackCount(stackRemainderCount, stack);
 
     let functionsRun = [];
     for (let funKy of Object.getOwnPropertyNames(functions)) {
@@ -73,7 +74,7 @@ class JoiCompute {
         continue;
 
       const argValues = JoiCompute.getChangedArgumentsOrNullIfNoneHasChanged(funcObj.argsPaths, pathsCache, previousPathsCache);
-      if (!argValues){        //none of the arguments have changed, we then update perFuncOldPathsCache and do nothing.
+      if (!argValues) {        //none of the arguments have changed, we then update perFuncOldPathsCache and do nothing.
         perFuncOldPathsCache[funKy] = pathsCache;
         continue;
       }
@@ -87,7 +88,7 @@ class JoiCompute {
         continue;
 
       if (newComputedValue === pathsCache[funcObj.returnPath])
-        continue;                                      
+        continue;
       pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
       const temporaryResult = [{functionsRun, pathsCache}].concat(stack);
@@ -97,21 +98,32 @@ class JoiCompute {
     return [finalResult];
   }
 
+  //todo, this one should not return any values if one of the paths are actually not set.
+  //this i might need to fix in the JoiGraph.getInAll so that if the state does not contain that path,
+  //it is not added to the result object. if it is undefined, then it is not there.
+  //undefined in the graph will break it.
   static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, pathToValueNow, pathToValueBefore) {
     let res = [], changed = false;
     for (let path of argsPaths) {
       if (pathToValueNow[path] !== pathToValueBefore[path])
         changed = true;
+      // if (pathToValueNow[path] === undefined)
+      //   return null;
+      //todo no.. should i do this? no.. if i do this, then no computes or observers will be called on undefined..
+      //todo, they will not be called in the beginning, because then all the undefined will also be undefined.
+      //todo so i should not filter on undefined..
       res.push(pathToValueNow[path]);
     }
-    return changed ? res: null;
+    return changed ? res : null;
   }
 
-  static checkStackCount(stackRemainderCount) {
-    if (stackRemainderCount >= 0)
-      return stackRemainderCount - 1;
-    throw new Error(
-      "StackOverFlowError in JoiCompute (JoiState). Probably an infinite loop.\n " +
-      "Tip: Even if it is not an infinite loop, you should still simplify your compute structure.");
+  static checkStackCount(stackRemainderCount, stack) {
+    if (stackRemainderCount < stack.length) {
+      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ")+ "]" );
+      throw new Error(
+        "StackOverFlowError in JoiCompute (JoiState), probably an infinite loop.\n" +
+        functions.join("\n")
+      );
+    }
   }
 }
