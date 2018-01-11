@@ -15,14 +15,15 @@ class JoiCompute {
     pathsAsStrings.map(path => this.pathRegister[path] = undefined);
     if (!this.observeOnly)
       this.pathRegister[returnName] = undefined;
-    const res = {
+
+    let funKy = returnName +" = " +func.name + "(" + pathsAsStrings.join(", ") + ")";
+    this.functionsLastRunRegister[funKy] = {};
+    this.functionsRegister[funKy] = {
       func: func,
       funcName: func.name,
       argsPaths: pathsAsStrings,
       returnPath: returnName
     };
-    this.functionsLastRunRegister[res.returnPath + res.funcName] = {};
-    this.functionsRegister[res.returnPath + res.funcName] = res;
   }
 
   //this.functionsRegister remember the last situation of the stack run, between updates(!),
