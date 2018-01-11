@@ -45,27 +45,42 @@ class JoiCompute {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
     for (let funcKey in functions) {
-      const funcObj = functions[funcKey];       //this is a this.functionsRegister copy that never change
-      const prevPathsCache = functionsLastRunRegister[funcKey];
+      const funcObj = functions[funcKey];
 
-      const isEqual = funcObj.argsPaths.every(path => prevPathsCache[path] === pathsCache[path]);
-      if (isEqual)                      //none of the arguments have changed, then we do nothing.
+      let previousPathsCache = functionsLastRunRegister[funcKey];
+      if (previousPathsCache === pathsCache)        //funcObj has been run on the exact same paths
         continue;
-      const newArgsValues = funcObj.argsPaths.map(path => pathsCache[path]);
-      let newComputedValue = funcObj.func.apply(null, newArgsValues);
 
-      functionsLastRunRegister = Object.assign({}, functionsLastRunRegister);           //todo not necessary now..
+      const argValues = JoiCompute.getChangedArgumentsOrNullIfNoneHasChanged(funcObj.argsPaths, pathsCache, previousPathsCache)
+      if (!argValues){                            //none of the arguments have changed, then we do nothing.
+        functionsLastRunRegister[funcKey] = pathsCache;
+        continue;
+      }
+
+      let newComputedValue = funcObj.func.apply(null, argValues);
+
+      functionsLastRunRegister = Object.assign({}, functionsLastRunRegister);
       functionsLastRunRegister[funcKey] = pathsCache;
       if (!funcObj.returnPath)
         continue;
 
-      if (JoiGraph.equals(newComputedValue, pathsCache[funcObj.returnPath]))    //we changed the arguments, but the result didn't change.
-        continue;                                      //Therefore, we don't need to recheck any of the previous functions run.
-      pathsCache = Object.assign({}, pathsCache);                                       //todo not necessary now..
+      if (newComputedValue === pathsCache[funcObj.returnPath])
+        continue;                                      
+      pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
       return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, functionsLastRunRegister).concat([pathsCache]);
     }
     return [pathsCache];
+  }
+
+  static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, pathToValueNow, pathToValueBefore) {
+    let res = [], changed = false;
+    for (let path of argsPaths) {
+      if (pathToValueNow[path] !== pathToValueBefore[path])
+        changed = true;
+      res.push(pathToValueNow[path]);
+    }
+    return changed ? res: null;
   }
 
   static checkStackCount(stackRemainderCount) {
