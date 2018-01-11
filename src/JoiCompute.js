@@ -7,6 +7,7 @@ class JoiCompute {
     this.pathRegister = {};
     this.observeOnly = observeOnly;
     this.stack = [];
+    this.previousState = {};
   }
 
   //here we could reorder the functionsRegister so that the functions with fewest arguments are listed before the functions with more arguments,
@@ -16,7 +17,7 @@ class JoiCompute {
     if (!this.observeOnly)
       this.pathRegister[returnName] = undefined;
 
-    let funKy = returnName +" = " +func.name + "(" + pathsAsStrings.join(", ") + ")";
+    let funKy = returnName + " = " + func.name + "(" + pathsAsStrings.join(", ") + ")";
     this.functionsLastRunRegister[funKy] = {};
     this.functionsRegister[funKy] = {
       func: func,
@@ -32,10 +33,11 @@ class JoiCompute {
   //the pathsCache is refreshed for every update.
   update(newValue) {
     let pathsCache = JoiGraph.getInAll(newValue, this.pathRegister);
-    let functionsLastRunRegister = this.functionsLastRunRegister;
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, functionsLastRunRegister, this.observeOnly);
+    let functionsLastRunRegister = {};
     for (let funKy in this.functionsRegister)
-      this.functionsLastRunRegister[funKy] = this.stack[0];
+      functionsLastRunRegister[funKy] = this.previousState;
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, functionsLastRunRegister, this.observeOnly);
+    this.previousState = this.stack[0];
     return JoiGraph.setInAll(newValue, this.stack[0]);
   }
 

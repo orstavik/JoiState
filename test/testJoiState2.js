@@ -53,6 +53,13 @@ describe('test 2 of JoiState', function () {
     expect(window[computeTestValue]).to.deep.equal(testValue);
   });
 
+  //test paths that could be confused.
+  // same function as observer for different paths.
+  // same function as computer for different paths.
+  // two computer functions writing to the same path, only the last should be active.
+  // same computer against the same paths, but with different return point. not necessary, but still..
+  // same function as computer for different paths such as "a.b, c" and "a, b.c"
+
   //do the same with a complex object for instead of AB as a string
 });
 
