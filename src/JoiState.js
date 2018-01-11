@@ -47,10 +47,10 @@ class JoiState {
     const startQueLength = this.que.length - 1;              //for debug
     const e = task.event;
     let startState = this.state;
-    let reducedState = reducer(startState, e.detail);       //1. reduce
+    let reducedState = reducer(startState, e.detail);         //1. reduce
     let computedState;
-    if(startState !== reducedState){                                                 //todo we need a try catch around compute so to make a good error message
-      computedState = this.computer.update(reducedState); //2. compute
+    if (startState !== reducedState) {
+      computedState = this.computer.update(reducedState);     //2. compute
       this.observer.update(computedState);                    //3. observe
       this.state = computedState;
     }

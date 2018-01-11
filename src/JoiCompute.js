@@ -45,42 +45,41 @@ class JoiCompute {
   update(newReducedState) {
     let pathsCache = JoiGraph.getInAll(newReducedState, this.pathRegister);
     let perFuncPreviousPathsCache = {};
-    for (let funKy in this.functionsRegister)
+    for (let funKy of Object.getOwnPropertyNames(this.functionsRegister))
       perFuncPreviousPathsCache[funKy] = this.stack[0];
     this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache);
     return JoiGraph.setInAll(newReducedState, this.stack[0]);
   }
 
-  //pathsCache is an immutable structure passed into __compute stack
   /**
    *
    * @param functions
    * @param stackRemainderCount
-   * @param pathsCache
-   * @param perFuncOldPathsCache
-   * @returns {*}
+   * @param pathsCache              immutable
+   * @param perFuncOldPathsCache    immutable
+   * @returns {Object[]} all the pathsCache, the full stack.
    * @private
    */
   static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache) {
     stackRemainderCount = JoiCompute.checkStackCount(stackRemainderCount);
 
-    for (let funcKey in functions) {
-      const funcObj = functions[funcKey];
+    for (let funKy of Object.getOwnPropertyNames(functions)) {
+      const funcObj = functions[funKy];
 
-      let previousPathsCache = perFuncOldPathsCache[funcKey];
+      let previousPathsCache = perFuncOldPathsCache[funKy];
       if (previousPathsCache === pathsCache)        //funcObj has been run on the exact same paths
         continue;
 
-      const argValues = JoiCompute.getChangedArgumentsOrNullIfNoneHasChanged(funcObj.argsPaths, pathsCache, previousPathsCache)
-      if (!argValues){                            //none of the arguments have changed, then we do nothing.
-        perFuncOldPathsCache[funcKey] = pathsCache;
+      const argValues = JoiCompute.getChangedArgumentsOrNullIfNoneHasChanged(funcObj.argsPaths, pathsCache, previousPathsCache);
+      if (!argValues){        //none of the arguments have changed, we then update perFuncOldPathsCache and do nothing.
+        perFuncOldPathsCache[funKy] = pathsCache;
         continue;
       }
 
       let newComputedValue = funcObj.func.apply(null, argValues);
 
       perFuncOldPathsCache = Object.assign({}, perFuncOldPathsCache);
-      perFuncOldPathsCache[funcKey] = pathsCache;
+      perFuncOldPathsCache[funKy] = pathsCache;
       if (!funcObj.returnPath)
         continue;
 
