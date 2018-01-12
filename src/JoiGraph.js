@@ -7,9 +7,6 @@
  * JoiGraph functions will delete from the Dictionary when it is setting values:
  * a) any properties with value undefined
  * b) any objects without properties
- *
- * todo make a function to remove all properties that point to undefined or empty object?
- * todo how to best freeze it?
  */
 class JoiGraph {
 
@@ -154,20 +151,15 @@ class JoiGraph {
     return newObj;
   }
 
-  //returns an immutable copy of A with the branches of B either
-  // - merged (if they differ) or
-  // - nulled out in result (if B point null value).
-  //
-  //if either only B === null, then the branch will be deleted. (if the same criteria was set for A, it would be impossible to write in a new value for the same key later)
-  //if either A or B === undefined or {} (empty object), then the other branch is used.
+
   /**
-   *
+   * Null in any branch of B will delete that property in the return object. This works recursively.
+   * If the same criteria was set for A in general, it would be impossible to write in a new value for the same key later.
    * @param A
    * @param B
    * @returns {Object} an immutable copy of A with B branches merged into it, or deleted if B branches contains null
    */
   static mergeDeepWithNullToDelete(A, B) {
-    const freeze = true;
     if (B === null) return null;
     if (B === undefined || JoiGraph.emptyObject(B))
       return A;
@@ -199,8 +191,8 @@ class JoiGraph {
     return C;
   }
 
-
   /**
+   * todo how to best freeze it?
    * Function that apply Object.freeze on
    * @param obj
    */
