@@ -1,6 +1,6 @@
 {
   "name": "joistate",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Enjoy a good state machine.",
   "author": "orstavik <intertext.no@gmail.com>",
   "license": "MIT"
