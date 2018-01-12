@@ -98,32 +98,27 @@ class JoiCompute {
     return [finalResult];
   }
 
-  //todo, this one should not return any values if one of the paths are actually not set.
-  //this i might need to fix in the JoiGraph.getInAll so that if the state does not contain that path,
-  //it is not added to the result object. if it is undefined, then it is not there.
-  //undefined in the graph will break it.
-  static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, pathToValueNow, pathToValueBefore) {
+  static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, nowValues, beforeValues) {
     let res = [], changed = false;
     for (let path of argsPaths) {
-      if (pathToValueNow[path] !== pathToValueBefore[path])
+      if (nowValues[path] !== beforeValues[path] && !JoiCompute.twoNaN(nowValues[path], beforeValues[path]))
         changed = true;
-      // if (pathToValueNow[path] === undefined)
-      //   return null;
-      //todo no.. should i do this? no.. if i do this, then no computes or observers will be called on undefined..
-      //todo, they will not be called in the beginning, because then all the undefined will also be undefined.
-      //todo so i should not filter on undefined..
-      res.push(pathToValueNow[path]);
+      res.push(nowValues[path]);
     }
     return changed ? res : null;
   }
 
   static checkStackCount(stackRemainderCount, stack) {
     if (stackRemainderCount < stack.length) {
-      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ")+ "]" );
+      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ") + "]");
       throw new Error(
         "StackOverFlowError in JoiCompute (JoiState), probably an infinite loop.\n" +
         functions.join("\n")
       );
     }
+  }
+
+  static twoNaN(a, b) {
+    return typeof a === "number" && typeof b === "number" && isNaN(a) && isNaN(b);
   }
 }
