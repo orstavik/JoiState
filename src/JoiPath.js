@@ -80,23 +80,22 @@ class JoiPath {
   //if either only B === null, then the branch will be deleted. (if the same criteria was set for A, it would be impossible to write in a new value for the same key later)
   //if either A or B === undefined or {} (empty object), then the other branch is used.
   static mergeDeepWithNullToDelete(A, B) {
-    const freeze = true;
     if (B === null) return null;
-    if (B === undefined || JoiPath.emptyObject(B))
-      return freeze ? Object.freeze(A) : A;
-    if (A === undefined || JoiPath.emptyObject(A))
-      return freeze ? Object.freeze(B) : B;
+    if (B === undefined || JoiGraph.emptyObject(B))
+      return A;
+    if (A === undefined || JoiGraph.emptyObject(A))
+      return B;
     if (A === B)
-      return freeze ? Object.freeze(A) : A;
+      return A;
     if (!(A instanceof Object && B instanceof Object))
-      return freeze ? Object.freeze(B) : B;
+      return B;
 
     let C = Object.assign({}, A);
     let hasMutated = false;
     for (let key of Object.keys(B)) {
       const a = A[key];
       const b = B[key];
-      let c = JoiPath.mergeDeepWithNullToDelete(a, b, freeze);
+      let c = JoiPath.mergeDeepWithNullToDelete(a, b, false);
       if (c === a)
         continue;
       hasMutated = true;
@@ -106,10 +105,10 @@ class JoiPath {
         C[key] = c; //null is also set as a value in C
     }
     if (!hasMutated)
-      return freeze ? Object.freeze(A) : A;
+      return A;
     if (Object.keys(C).length === 0)
       return {};
-    return freeze ? Object.freeze(C) : C;
+    return C;
   }
 
   /**
@@ -287,11 +286,7 @@ class JoiPath {
   }
 
   static isNothing(A) {
-    return A === undefined || A === null || JoiPath.emptyObject(A);
-  }
-
-  static emptyObject(A) {
-    return A instanceof Object && Object.keys(A).length === 0; //todo typeof???
+    return A === undefined || A === null || JoiGraph.emptyObject(A);
   }
 
   //removes the

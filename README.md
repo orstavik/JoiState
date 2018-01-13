@@ -36,3 +36,8 @@ And so, to tackle the problem that different parts of your app needs to read and
 So, naturally, what if we instead of trying to manage the complexity of the state by splitting it up, put all state data together in one place? Centralize everything? It turns out, that if we centralize our app data that first, we get much better oversight over when and what changes that alters the app and in what way. All our app data is stored in one object, and when the app does something, we can see what changes in this single app state object. That is nice. That helps. With the first problem of OOP state at least. The second problem with the same state being changed in several parallell threads of time, can be solved with a que now that you have a single place where all these parallell threads coalesce. The only problem is that it nullifies parts of my precious education where I got diplomas that says that OOP is the best way to code.
 
 TLDR; Gathering all the app data in a single app state has few mayor drawbacks. On the plus side it adds a great deal of oversight. And it gives you a place to put your que if you need to tackle async state changes. And if you add the principle of immutability in your state object, you get some other cool features such as timetravel and atomic operations. That helps us sleep.
+
+###Problem with mutability occurs when
+a) big, distributed, many different files all working against the same data
+
+b) async, different parts of app need to wait for other parts of app to both write to the same properties.

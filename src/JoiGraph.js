@@ -151,6 +151,9 @@ class JoiGraph {
     return newObj;
   }
 
+  static emptyObject(A) {
+    return typeof A === "object" && Object.getOwnPropertyNames(A).length === 0;
+  }
 
   /**
    * Null in any branch of B will delete that property in the return object. This works recursively.
@@ -163,11 +166,11 @@ class JoiGraph {
     if (B === null) return null;
     if (B === undefined || JoiGraph.emptyObject(B))
       return A;
-    if (A === undefined || JoiPath.emptyObject(A))
+    if (A === undefined || JoiGraph.emptyObject(A))
       return B;
     if (A === B)
       return A;
-    if (!(A instanceof Object && B instanceof Object))
+    if (!(JoiGraph.instanceofObject(A) && JoiGraph.instanceofObject(B)))
       return B;
 
     let C = Object.assign({}, A);
@@ -175,7 +178,7 @@ class JoiGraph {
     for (let key of Object.keys(B)) {
       const a = A[key];
       const b = B[key];
-      let c = JoiPath.mergeDeepWithNullToDelete(a, b, freeze);
+      let c = JoiGraph.mergeDeepWithNullToDelete(a, b);
       if (c === a)
         continue;
       hasMutated = true;
