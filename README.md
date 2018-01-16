@@ -3,6 +3,8 @@ Small ES6 state manager.
 JoiState can both produce, reduce, compute and observe a state. 
 The state consists only of a normal, immutable JS object.
 
+![alt text](./readme_img/JoiState_overview.jpg "Overview of JoiState")
+
 ## How does JoiState work?
 JoiState works by:
 a) gathering all state data into a consistent, single, immutable object, and
@@ -16,7 +18,7 @@ After the reducer have changed the state, all the compute functions bound to the
 
 At last, the observers are run. Similar to the compute functions, the observers only run if the value of one or more of its observe functions have changed. The observers provide an excellent location to trigger async actions based on state changes, actions that should run in parallell with the normal update of the view.
 
-## Why pursue JoiState?
+## Why pursue JoiState?                                      
 There are two types of apps: apps in a state of chaos, and apps with an ordered state. Now, of course, every app developer wants apps with an ordered state. And few developers make chaotic app states on purpose. Most app developer also follow some kind of strategy (backed by various libraries and authorative developer advocates) that they think will make their state ordered and safe. So why is the app state then a problem?
 
 The problem with app state grows exponentially as the complexity of the app grows. First, the app becomes more quantatively complex. The app grows as ever more functionality and components are added. Second, the app becomes more advanced. It starts to handle asynchronous and parallell problems(state changes that in principle occur at the same time, but in different places). Third, the app becomes more technically advanced. It starts to spread across different platforms (client/server) and different technologies (html/css/js). And as all this complexity is piled on the app, the app state needs to be maintained with close to 100% precision. Yes, that is difficult.
