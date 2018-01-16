@@ -143,8 +143,8 @@ class JoiGraph {
 
     let child = JoiGraph.instanceofObject(obj) ? obj[path[0]] : undefined;
     let newChild = JoiGraph._setInImpl(child, path.slice(1), value);
-    if (child === newChild)
-      return obj;
+    // if (child === newChild)                 //todo removing this option does not seem to break any tests so far.
+    //   return obj;
 
     let newObj = Object.assign(Object.create(null, {}), obj);
     newObj[path[0]] = newChild;
@@ -193,6 +193,51 @@ class JoiGraph {
       return {};
     return C;
   }
+
+  //todo start max
+  /**
+   * Immutable filter that strips out
+   * 1) entries of A that are matching exactly entries in B
+   * 2) all empty entries (with undefined or empty objects as value) in A.
+   *
+   * @param {object} A the object to be filtered
+   * @param {object} B the filter
+   * @returns A if nothing is filtered away,
+   *          undefined if A is empty or the whole content of A is filtered out by B,
+   *          a new object C which is an immuted version of the partially filtered A.
+   */
+  static filterDeep(A, B) {
+    const noA = A === undefined || JoiGraph.emptyObject(A);
+    const noB = B === undefined || JoiGraph.emptyObject(B);
+    if (noA && noB) return undefined;
+    if (noB) return A;
+    if (noA) return undefined;
+    if (A === B) return undefined;
+    if (!(JoiGraph.instanceofObject(A)&& JoiGraph.instanceofObject(B))) return A;
+
+    const C = {};
+    let hasFiltered = false;
+    for (let key of Object.getOwnPropertyNames(A)) {
+      const a = A[key];
+      const b = B[key];
+      if (a === null && b === undefined) {
+        hasFiltered = true; //todo Work with this, maybe make a nicer model in realtimeboard.
+        continue;
+        /*second check is removing A[key]=null && B[key]=undefined*/
+      }
+      let c = JoiGraph.filterDeep(a, b);
+      if (c !== a)
+        hasFiltered = true;
+      if (c !== undefined)
+        C[key] = c;
+    }
+    if (!hasFiltered)
+      return A;
+    if (Object.getOwnPropertyNames(C).length === 0)
+      return undefined;
+    return C;
+  }
+  //todo stop max
 
   /**
    * todo how to best freeze it?
