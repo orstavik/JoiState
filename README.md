@@ -43,3 +43,7 @@ TLDR; Gathering all the app data in a single app state has few mayor drawbacks. 
 a) big, distributed, many different files all working against the same data
 
 b) async, different parts of app need to wait for other parts of app to both write to the same properties.
+
+### In depth descriptions
+1) [How to structure web components 1 (OOP and functional?)](./tutorial/web_comp.md)
+2) I should have one about how to structure the routing in the web components

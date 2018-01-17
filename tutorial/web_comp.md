@@ -5,7 +5,7 @@ The Questions become: which strategy to choose, where and why?
 When and why should you make an OOP web component with internal state?
 And when and why should you make functional web components?
 
-![alt text](JoiState_overview.jpg "Overview of JoiState with UI description")
+![alt text](JoiStateAppWebComps.jpg "Overview of JoiState with UI description")
 
 ### Strategy 1: App-specific web compoments.
 An **app-specific** web component contains functionality and template custom to one
