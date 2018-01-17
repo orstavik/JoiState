@@ -3,7 +3,7 @@ Small ES6 state manager.
 JoiState can both produce, reduce, compute and observe a state. 
 The state consists only of a normal, immutable JS object.
 
-![alt text](./readme_img/JoiState_overview.jpg "Overview of JoiState")
+![alt text](tutorial/JoiState_overview.jpg "Overview of JoiState")
 
 ## How does JoiState work?
 JoiState works by:
