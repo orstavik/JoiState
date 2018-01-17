@@ -56,6 +56,25 @@ class JoiGraph {
     return true;
   }
 
+  /**
+   * Equal check that deliberately skips checking the _prototype object and that if both A and B are objects, does only
+   * check that they both contain the exact same keys, but their values can be anything.
+   * @returns {boolean} true if A and B are the same, are both nothing, or if both are objects and have the same key.
+   */
+  static equalsShallow(A, B) {
+    if (A === B || (JoiGraph.isNothing(A) && JoiGraph.isNothing(B)))
+      return true;
+    if (!(JoiGraph.instanceofObject(A)) || !(JoiGraph.instanceofObject(B)))
+      return false;
+    const aKeys = Object.getOwnPropertyNames(A);
+    const bKeys = Object.getOwnPropertyNames(B);
+    return aKeys.length === bKeys.length && aKeys.every(key => bKeys.indexOf(key) >= 0);
+  }
+
+  static twoNaN(a, b) {
+    return typeof a === "number" && typeof b === "number" && isNaN(a) && isNaN(b);
+  }
+
   static hasProperty(obj, propName) {
     return JoiGraph.instanceofObject(obj) && propName in obj;
   }
@@ -213,7 +232,7 @@ class JoiGraph {
     if (noB) return A;
     if (noA) return undefined;
     if (A === B) return undefined;
-    if (!(JoiGraph.instanceofObject(A)&& JoiGraph.instanceofObject(B))) return A;
+    if (!(JoiGraph.instanceofObject(A) && JoiGraph.instanceofObject(B))) return A;
 
     const C = {};
     let hasFiltered = false;
@@ -238,6 +257,55 @@ class JoiGraph {
     return C;
   }
   //todo stop max
+
+  /**
+   * Flattens a normal object tree to an array of {path, value} objects
+   * where path is an array of keys as strings. Only works with objects.
+   *
+   *     let tree = {a: {x: 1}, b: {y: {"12": "something"}}};
+   *     let flatTree = JoiPath.flatten(tree, "start", "/");
+   *     //flatTree == {"start/a/x": 1, "start/b/y/12": "something"}
+   *
+   * @param object object to be flattened
+   * @param separator "/" or "."
+   * @param path <string> to be used (att! does this path use the same segment separator as you send in)
+   * @param res <Object> a mutable object into which the values will be put. Do not use this parameter unless you know what you are doing.
+   * @returns an object of [{path: <string>, value: *}] for that object
+   */
+  static flatten(obj, separator = ".", path = "", res = {}) {
+    if (obj === undefined || JoiGraph.emptyObject(obj))
+      return res;
+    if (JoiGraph.instanceofObject(obj)) {
+      path = path !== "" ? path + separator : path;
+      for (let key of Object.getOwnPropertyNames(obj))
+        JoiGraph.flatten(obj[key], separator, path + key, res);
+      return res;
+    }
+    res[path] = obj;
+    return res;
+  };
+
+  /**
+   * Returns all the parent paths from the paths array.
+   *
+   * @param paths [<string>] An array of paths such as ["a.b.c", "a.d.e"] or ["a/b/c", "a/d/e"]
+   * @param separator usually "." or "/".
+   * @returns {Array} If paths are ["a.b.c.d", "b.d"] and separator ".",
+   * then the parent paths are ["a.b.c", "a.b", "a", "b"]
+   */
+  static getParentPaths(paths, separator = ".") {
+    const res = [];
+    for (let p of paths) {
+      let ar = p.split(separator);
+      while (ar.length > 1) {
+        ar.pop();
+        const parentPath = ar.join(separator);
+        if (res.indexOf(parentPath) === -1)
+          res.push(parentPath);
+      }
+    }
+    return res;
+  }
 
   /**
    * todo how to best freeze it?

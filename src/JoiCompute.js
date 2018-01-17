@@ -101,7 +101,7 @@ class JoiCompute {
   static getChangedArgumentsOrNullIfNoneHasChanged(argsPaths, nowValues, beforeValues) {
     let res = [], changed = false;
     for (let path of argsPaths) {
-      if (nowValues[path] !== beforeValues[path] && !JoiCompute.twoNaN(nowValues[path], beforeValues[path]))
+      if (nowValues[path] !== beforeValues[path] && !JoiGraph.twoNaN(nowValues[path], beforeValues[path]))
         changed = true;
       res.push(nowValues[path]);
     }
@@ -116,9 +116,5 @@ class JoiCompute {
         functions.join("\n")
       );
     }
-  }
-
-  static twoNaN(a, b) {
-    return typeof a === "number" && typeof b === "number" && isNaN(a) && isNaN(b);
   }
 }

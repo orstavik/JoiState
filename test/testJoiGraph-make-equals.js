@@ -1,4 +1,4 @@
-describe('test of JoiGraph.make', function () {
+describe('JoiGraph.make', function () {
   it("JoiGraph.make()", function () {
     const a = JoiGraph.make();
     const b = JoiGraph.make({});
@@ -10,8 +10,7 @@ describe('test of JoiGraph.make', function () {
   });
 });
 
-describe('test of JoiGraph.equals', function () {
-  const deleteTests = [undefined, Object.create(null, {}), {}];
+describe('JoiGraph.equals', function () {
   const one = JoiGraph.make({
     a: {
       aa: {
@@ -37,5 +36,51 @@ describe('test of JoiGraph.equals', function () {
       ac: 13
     });
     expect(match).to.be.true;
+  });
+});
+
+describe('JoiGraph.equalsShallow', function () {
+  const one = JoiGraph.make({
+    a: {
+      aa: {
+        aaa: 111
+      },
+      ab: 12,
+      ac: 13
+    },
+    b: 2,
+    c: 3
+  });
+
+  it("JoiGraph.equalsShallow(one,X)", function () {
+    let match = JoiGraph.equalsShallow(one, one);
+    expect(match).to.be.true;
+    match = JoiGraph.equalsShallow(one.b, 5);
+    expect(match).to.be.false;
+    match = JoiGraph.equalsShallow(one.b, 2);
+    expect(match).to.be.true;
+    match = JoiGraph.equalsShallow(one.a, {
+      aa: {
+        aaa: 333
+      },
+      ab: null,
+      ac: undefined
+    });
+    match = JoiGraph.equalsShallow(one.a, {
+      aa: {
+        aaa: 333
+      },
+      ac: undefined
+    });
+    expect(match).to.be.false;
+    match = JoiGraph.equalsShallow(one.a, {
+      aa: {
+        aaa: 333
+      },
+      ab: null,
+      ac: undefined,
+      ad: 333
+    });
+    expect(match).to.be.false;
   });
 });
