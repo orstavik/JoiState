@@ -55,6 +55,7 @@ class JoiState {
         this.observer.update(computedState);                    //3. observe
         this.state = computedState;
       } catch (err) {
+        console.error(err);
         error = err;
       }
     }
