@@ -170,8 +170,11 @@ class JoiGraph {
     return newObj;
   }
 
+  /**
+   * @returns {boolean} true if typeof A === "object" && A!== null && Object.getOwnPropertyNames(A).length === 0
+   */
   static emptyObject(A) {
-    return typeof A === "object" && Object.getOwnPropertyNames(A).length === 0;
+    return typeof A === "object" && A !== null && Object.getOwnPropertyNames(A).length === 0;
   }
 
   /**
@@ -256,15 +259,17 @@ class JoiGraph {
       return undefined;
     return C;
   }
+
   //todo stop max
 
   /**
    * Flattens a normal object tree to an array of {path, value} objects
    * where path is an array of keys as strings. Only works with objects.
+   * Parent paths are added as empty {}.
    *
    *     let tree = {a: {x: 1}, b: {y: {"12": "something"}}};
    *     let flatTree = JoiPath.flatten(tree, "start", "/");
-   *     //flatTree == {"start/a/x": 1, "start/b/y/12": "something"}
+   *     flatTree === {"start": {}, "start/a": {}, "start/a/x": 1, "start/b": {}, "start/b/y": {}, "start/b/y/12": "something"}; //true
    *
    * @param object object to be flattened
    * @param separator "/" or "."
@@ -273,15 +278,14 @@ class JoiGraph {
    * @returns an object of [{path: <string>, value: *}] for that object
    */
   static flatten(obj, separator = ".", path = "", res = {}) {
-    if (obj === undefined || JoiGraph.emptyObject(obj))
-      return res;
     if (JoiGraph.instanceofObject(obj)) {
-      path = path !== "" ? path + separator : path;
+      res[path] = JoiGraph._flattenEmptyObject;
+      let childPath = (path === "" ? path : path + separator);
       for (let key of Object.getOwnPropertyNames(obj))
-        JoiGraph.flatten(obj[key], separator, path + key, res);
-      return res;
+        JoiGraph.flatten(obj[key], separator, childPath + key, res);
+    } else {
+      res[path] = obj;
     }
-    res[path] = obj;
     return res;
   };
 
@@ -304,6 +308,22 @@ class JoiGraph {
           res.push(parentPath);
       }
     }
+    return res;
+  }
+
+  static orderedAssign(A, B) {
+    let lastHit = 0;
+    let resKeys = Object.getOwnPropertyNames(A);
+    for (let key of Object.getOwnPropertyNames(B)) {
+      let index = resKeys.indexOf(key);
+      if (index >= 0)
+        lastHit = index;
+      else
+        resKeys.splice(++lastHit, 0, key);
+    }
+    const res = {};
+    for (let key of resKeys)
+      res[key] = B.hasOwnProperty(key) ? B[key] : A[key];
     return res;
   }
 
@@ -335,4 +355,5 @@ class JoiGraph {
   }
 }
 
+JoiGraph._flattenEmptyObject = {};
 JoiGraph.pathCache = {};
