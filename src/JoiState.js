@@ -1,14 +1,12 @@
 class JoiState {
 
   constructor(initial) {
-    this.state = {};
-    this.history = [];
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(0);
-
-    this.state = JoiGraph.deepFreeze(initial);
-    this.history = [];
+    this.state = JoiGraph.deepFreeze(initial || {});
     this.que = [];
+
+    this.history = [];
     window.addEventListener("state-history-get", e => JoiState.emit("state-history", this.history));     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
@@ -44,7 +42,6 @@ class JoiState {
   reduceComputeObserveInner(task) {
     let start = performance.now();
     const reducer = task.reducer;
-    const startQueLength = this.que.length - 1;              //for debug
     const e = task.event;
     let startState = this.state;
     let reducedState = reducer(startState, e.detail);         //1. reduce
@@ -60,10 +57,10 @@ class JoiState {
       }
     }
     this.que.shift();
-    const snapShot = JoiState._takeSnapshot(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, startQueLength, this.que.splice());
+    const snapShot = JoiState._takeSnapshot(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, this.que);
     this.history = [snapShot].concat(this.history);
     // if (this.history.length > 100) this.history = this.history.slice(0,50);
-    if (error){
+    if (error) {
       JoiState.emit("state-error", error);
     } else {
       JoiState.emit("state-changed", this.state);
@@ -74,7 +71,7 @@ class JoiState {
       this.reduceComputeObserveInner(this.que[0]);
   }
 
-  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, startQueLength, que) {
+  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {
     task.taskName = task.reducer.name;
     task.event = {type: event.type, detail: event.detail};
     task.start = start;
@@ -88,8 +85,7 @@ class JoiState {
       task,
       computerInfo: computerInfo.functionsRegister,
       observerInfo: observerInfo.functionsRegister,
-      startQueLength,
-      que
+      que: que.slice(0)
     };
   }
 
