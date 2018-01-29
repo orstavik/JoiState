@@ -28,7 +28,7 @@ class JoiState {
     const task = {event: e, reducer: reducer, added: new Date().getTime()};
     this.que.push(task);
     if (this.que[0] === task)
-      return this.reduceComputeObserveInner(task);
+      return this._reduceComputeObserveInner(task);
   }
 
   _throttleEventReducers(reducer, event) {
@@ -39,7 +39,7 @@ class JoiState {
     return true;
   }
 
-  reduceComputeObserveInner(task) {
+  _reduceComputeObserveInner(task) {
     let start = performance.now();
     const reducer = task.reducer;
     const e = task.event;
@@ -66,9 +66,9 @@ class JoiState {
       JoiState.emit("state-changed", this.state);
     }
     JoiState.emit("state-history-changed", this.history);
-    // if (this.que.length > 100) setTimeout(()=> this.reduceComputeObserveInner(this.que[0]), 0);
+    // if (this.que.length > 100) setTimeout(()=> this._reduceComputeObserveInner(this.que[0]), 0);
     if (this.que.length > 0)
-      this.reduceComputeObserveInner(this.que[0]);
+      this._reduceComputeObserveInner(this.que[0]);
   }
 
   static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {
