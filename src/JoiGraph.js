@@ -79,7 +79,11 @@ class JoiGraph {
     return JoiGraph.instanceofObject(obj) && propName in obj;
   }
 
-
+  /**
+   * @param obj the object to be queried
+   * @param objWithPaths an object with all the paths to be queried as keys
+   * @returns {{}} a new object 
+   */
   static getInAll(obj, objWithPaths) {
     let res = {};
     for (let path in objWithPaths)
@@ -88,9 +92,12 @@ class JoiGraph {
   }
 
   /**
+   * @param {{}} obj
+   * @param {String} path dot-separated string with the path to the object, empty string "" gives the root object.
    * @returns {*} the value in the object at the given path, or undefined
    */
   static getIn(obj, path) {
+    if (path === "") return obj;
     return JoiGraph._getInImpl(obj, JoiGraph._getCachedPath(path));
   }
 
