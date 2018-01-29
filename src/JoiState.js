@@ -34,11 +34,11 @@ class JoiState {
     }
   }
 
-  _throttleEventReducers(reducer, event) {
-    let i = this.que.findIndex(existingTask => existingTask.reducer === reducer);
+  _throttleEventReducers(que, reducer, event) {
+    let i = que.findIndex(existingTask => existingTask.reducer === reducer);
     if (i === -1)
       return false;
-    this.que[i] = {event, reducer, added: new Date().getTime(), overWritesTask: this.que[i]};
+    que[i] = {event, reducer, added: new Date().getTime(), overWritesTask: que[i]};
     return true;
   }
 
