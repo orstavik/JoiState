@@ -27,8 +27,11 @@ class JoiState {
       return;
     const task = {event: e, reducer: reducer, added: new Date().getTime()};
     this.que.push(task);
-    if (this.que[0] === task)
-      return this._reduceComputeObserveInner(task);
+    while (this.que.length > 0) {              //todo this que is untested and unsafe in a multithreaded environment..
+      let runTask = this.que.shift();
+      this._reduceComputeObserveInner(runTask);
+      // if (this.que.length > 100) setTimeout(()=> this._reduceComputeObserveInner(this.que[0]), 0);
+    }
   }
 
   _throttleEventReducers(reducer, event) {
@@ -51,24 +54,17 @@ class JoiState {
         computedState = this.computer.update(reducedState);     //2. compute
         this.observer.update(computedState);                    //3. observe
         this.state = computedState;
+        JoiState.emit("state-changed", this.state);
       } catch (err) {
         console.error(err);
         error = err;
+        JoiState.emit("state-error", error);
       }
     }
-    this.que.shift();
     const snapShot = JoiState._takeSnapshot(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, this.que);
     this.history = [snapShot].concat(this.history);
     // if (this.history.length > 100) this.history = this.history.slice(0,50);
-    if (error) {
-      JoiState.emit("state-error", error);
-    } else {
-      JoiState.emit("state-changed", this.state);
-    }
     JoiState.emit("state-history-changed", this.history);
-    // if (this.que.length > 100) setTimeout(()=> this._reduceComputeObserveInner(this.que[0]), 0);
-    if (this.que.length > 0)
-      this._reduceComputeObserveInner(this.que[0]);
   }
 
   static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {
