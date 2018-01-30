@@ -1,8 +1,9 @@
 class JoiHistory {
 
-  constructor() {
+  constructor(state) {
     this.history = [];
-    window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
+    state.bindOnEnd(this.addToHistory.bind(this));
+    // window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
@@ -28,3 +29,16 @@ class JoiHistory {
     window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
   }
 }
+
+// class tww extends JoiState {
+//
+//   constructor(initState) {
+//     super(initState);
+//     this.history = [];
+//   }
+//
+//   _run(task) {
+//     super._run(task);
+//     this.history = [task].concat(this.history);
+//   }
+// }

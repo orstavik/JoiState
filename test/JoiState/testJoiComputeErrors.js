@@ -115,7 +115,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     //the error is thrown out as a global error, so you need to capture
     window.onerror = function (a, b, c, d, error) {
       expect("Error: i should fail").to.be.equal(error.toString());
-      state.detachReducers();
+      state.destructor();
       done();
     };
     window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true}));
@@ -137,7 +137,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     };
     state.bindOnEnd(function (newState) {
       expect(newState.a).to.be.equal(3);
-      state.detachReducers();
+      state.destructor();
       done();
     });
     window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true, detail: null}));
@@ -158,7 +158,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     //the error is thrown out as a global error, so you need to capture
     window.onerror = function (a, b, c, d, error) {
       expect(expectedErrorMsg).to.be.equal(error.toString());
-      state.detachReducers();
+      state.destructor();
       done();
     };
     window.dispatchEvent(new CustomEvent('state-test-infinte', {bubbles: true, composed: true, detail: 2}));

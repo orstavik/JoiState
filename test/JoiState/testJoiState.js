@@ -21,7 +21,7 @@ describe('test of JoiState', function () {
     state.bindReduce('state-test-one', reducerOne, true);
     state.bindOnEnd((newState)=>{
       expect(newState).to.deep.equal(testValue);
-      state.detachReducers();
+      state.destructor();
       done();
     });
     window.dispatchEvent(new CustomEvent('state-test-one', {bubbles: true, composed: true, detail: "reduceData"}));
@@ -54,7 +54,7 @@ describe('test of JoiState', function () {
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
     state.bindOnEnd((newState)=>{
       expect(newState).to.deep.equal(testValue);
-      state.detachReducers();
+      state.destructor();
       done();
     });
     window.dispatchEvent(new CustomEvent('state-test-two', {bubbles: true, composed: true, detail: "reduceData2"}));
@@ -91,7 +91,7 @@ describe('test of JoiState', function () {
     state.bindOnEnd((newState)=>{
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-      state.detachReducers();
+      state.destructor();
       done();
     });
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));

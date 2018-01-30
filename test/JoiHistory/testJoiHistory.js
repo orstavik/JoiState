@@ -14,11 +14,10 @@ describe('test of JoiHistory', function () {
     a: "a string"
   };
   const state = new JoiState(startState);
-  const history = new JoiHistory();
+  const history = new JoiHistory(state);
   state.bindReduce('history-test-one', reducerOne, true);
   state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
   state.bindObserve(observeOne, ["_computeTwo"]);
-  state.bindOnEnd(history.addToHistory.bind(history));
 
   it("test first run", function () {
     let testValue1 = [

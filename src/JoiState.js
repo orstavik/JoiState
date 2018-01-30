@@ -1,17 +1,26 @@
 class JoiState {
 
   constructor(initial) {
-    this.listeners = {};
+    this.reducers = {};
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(1);
     this.onEndFunctions = [];
     this.state = JoiGraph.deepFreeze(initial || {});
   }
 
+  destructor() {
+    for (let type in this.reducers)
+      this.detachReducer(type);
+  }
+
   bindReduce(eventName, reducer) {
-    const listener = event => this._run({event, reducer, start: performance.now()});
-    this.listeners[eventName] = listener;
-    window.addEventListener(eventName, listener);
+    this.reducers[eventName] = event => this._run({event, reducer, start: performance.now()});
+    window.addEventListener(eventName, this.reducers[eventName]);
+  }
+
+  detachReducer(eventName) {
+    window.removeEventListener(eventName, this.reducers[eventName]);
+    delete this.reducers[eventName];
   }
 
   bindCompute(returnProp, computeFunc, argsAsStrings) {
@@ -38,14 +47,5 @@ class JoiState {
     let observerInfo = this.observer;
     for (let func of this.onEndFunctions)
       func(this.state, {task, startState, reducedState, computerInfo, observerInfo});
-  }
-
-  detachReducer(eventName) {
-    window.removeEventListener(eventName, this.listeners[eventName]);
-  }
-
-  detachReducers() {
-    for (let type in this.listeners)
-      this.detachReducer(type);
   }
 }
