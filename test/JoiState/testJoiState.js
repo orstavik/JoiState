@@ -8,7 +8,7 @@ describe('test of JoiState', function () {
     expect(state.state).to.deep.equal({a: "a string"});
   });
 
-  it("reducer", function () {
+  it("reducer", function (done) {
 
     const testValue = {a: "a string", reducerOne: "reduceData"};
     const startState = {
@@ -23,11 +23,12 @@ describe('test of JoiState', function () {
       console.log(1);
       expect(newState).to.deep.equal(testValue);
       state.detachReducers();
+      done();
     });
     window.dispatchEvent(new CustomEvent('state-test-one', {bubbles: true, composed: true, detail: "reduceData"}));
   });
 
-  it("two computes", function () {
+  it("two computes", function (done) {
     let testValue = {
       a: "a string",
       reducerOne: "reduceData2",
@@ -56,11 +57,12 @@ describe('test of JoiState', function () {
       console.log(2);
       expect(newState).to.deep.equal(testValue);
       state.detachReducers();
+      done();
     });
     window.dispatchEvent(new CustomEvent('state-test-two', {bubbles: true, composed: true, detail: "reduceData2"}));
   });
 
-  it("observer", function () {
+  it("observer", function (done) {
     let testValue = {
       a: "a string",
       reducerOne: "reduceData",
@@ -93,6 +95,7 @@ describe('test of JoiState', function () {
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
       state.detachReducers();
+      done();
     });
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));
   });

@@ -35,11 +35,11 @@ class JoiState {
         computedState = this.computer.update(reducedState);          //2. compute
         this.observer.update(computedState);                         //3. observe
         this.state = computedState;
-        JoiState.emit("state-changed", this.state);
+        JoiState.fire("state-changed", this.state);
       } catch (err) {
         console.error(err);
         error = err;
-        JoiState.emit("state-error", error);
+        JoiState.fire("state-error", error);
       }
     }
     let computerInfo = this.computer;
@@ -48,8 +48,8 @@ class JoiState {
       func(this.state, {task, error, startState, reducedState, computerInfo, observerInfo});
   }
 
-  static emit(name, detail) {
-    return window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
+  static fire(name, detail) {
+    window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
   }
 
   detachReducer(eventName) {

@@ -2,7 +2,7 @@ class JoiHistory {
 
   constructor() {
     this.history = [];
-    window.addEventListener("state-history-get", e => JoiState.emit("state-history", this.history));
+    window.addEventListener("state-history-get", e => JoiState.fire("state-history", this.history));
     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
@@ -13,7 +13,7 @@ class JoiHistory {
     debugInfo.observerInfo = debugInfo.observerInfo.functionsRegister;
     this.history = [debugInfo].concat(this.history);
     // if (this.history.length > 100) this.history = this.history.slice(0,50);
-    JoiState.emit("state-history-changed", this.history);
+    JoiState.fire("state-history-changed", this.history);
   }
 
   static _simplifyTask(task) {
