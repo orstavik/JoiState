@@ -3,7 +3,7 @@ class JoiState {
   constructor(initial) {
     this.listeners = {};
     this.computer = new JoiCompute(100);
-    this.observer = new JoiCompute(0);
+    this.observer = new JoiCompute(1);
     this.onEndFunctions = [];
     this.state = JoiGraph.deepFreeze(initial || {});
   }
@@ -42,22 +42,17 @@ class JoiState {
         JoiState.emit("state-error", error);
       }
     }
+    let computerInfo = this.computer;
+    let observerInfo = this.observer;
     for (let func of this.onEndFunctions)
-      func(this.state, {
-        task,
-        error,
-        startState,
-        reducedState,
-        computerInfo: this.computer,
-        observerInfo: this.observer
-      });
+      func(this.state, {task, error, startState, reducedState, computerInfo, observerInfo});
   }
 
   static emit(name, detail) {
     return window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
   }
 
-  detachReducer(eventName){
+  detachReducer(eventName) {
     window.removeEventListener(eventName, this.listeners[eventName]);
   }
 
