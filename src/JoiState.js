@@ -21,37 +21,27 @@ class JoiState {
     this.observer.bind(observeFunc, argsAsStrings);
   }
 
+  //todo make a test for this in an async multithreaded environment
+  //todo this que is untested and unsafe in a multithreaded environment..
   _runOrAddToQue(e, reducer, throttle) {
-    if (throttle && this._throttleEventReducers(this.que, reducer, e))
-      return;
-    const task = {event: e, reducer: reducer, added: new Date().getTime()};
-    this.que.push(task);
-    while (this.que.length > 0) {              //todo this que is untested and unsafe in a multithreaded environment..
-      let runTask = this.que.shift();
-      this._reduceComputeObserveInner(runTask);
-      // if (this.que.length > 100) setTimeout(()=> this._reduceComputeObserveInner(this.que[0]), 0);
-    }
-  }
-
-  _throttleEventReducers(que, reducer, event) {
-    let i = que.findIndex(existingTask => existingTask.reducer === reducer);
-    if (i === -1)
-      return false;
-    que[i] = {event, reducer, added: new Date().getTime(), overWritesTask: que[i]};
-    return true;
+    //first, I add to/update the que items. This i always do.
+    this.que = JoiState._updateQueOrAddToTheEndOfQue(this.que, reducer, e, throttle);
+    //second, I check if I am the thread that should run this que, or if another thread is already running on this que.
+    //now, i do this by checking if the que.length is bigger than 0. This will not work. This can cause 2 threads to start working on it.
+    //maybe.. if you have web workers.. can that ever be the case?? can i ever get the reducer to be triggered from 2 places at the same time??
+    while (this.que.length > 0)
+      this._reduceComputeObserveInner(this.que.shift());      // if (this.que.length > 100) setTimeout(()=> this._reduceComputeObserveInner(this.que[0]), 0);
   }
 
   _reduceComputeObserveInner(task) {
     let start = performance.now();
-    const reducer = task.reducer;
-    const e = task.event;
     let startState = this.state;
-    let reducedState = reducer(startState, e.detail);         //1. reduce
+    let reducedState = task.reducer(startState, task.event.detail);         //1. reduce
     let computedState, error;
     if (startState !== reducedState) {
       try {
-        computedState = this.computer.update(reducedState);     //2. compute
-        this.observer.update(computedState);                    //3. observe
+        computedState = this.computer.update(reducedState);                 //2. compute
+        this.observer.update(computedState);                                //3. observe
         this.state = computedState;
         JoiState.emit("state-changed", this.state);
       } catch (err) {
@@ -63,22 +53,19 @@ class JoiState {
     this.history.addToHistory(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, this.que);
   }
 
-  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {
-    task.taskName = task.reducer.name;
-    task.event = {type: event.type, detail: event.detail};
-    task.start = start;
-    task.stop = performance.now();
-    return {
-      error,
-      startState,
-      reducedState,
-      computedState,
-      newState,
-      task,
-      computerInfo: computerInfo.functionsRegister,
-      observerInfo: observerInfo.functionsRegister,
-      que: que.slice(0)
-    };
+  //todo this now mutates the que. I think this is the right approach, but im not sure
+  static _updateQueOrAddToTheEndOfQue(que, reducer, event, throttle) {
+    const task = {event, reducer, added: new Date().getTime()};
+    if (throttle) {
+      let i = que.findIndex(existingTask => existingTask.reducer === reducer);
+      if (i >= 0){
+        task.overWritesTask = que[i];
+        que[i] = task;
+        return que;
+      }
+    }
+    que.push(task);
+    return que;
   }
 
   static emit(name, payload) {

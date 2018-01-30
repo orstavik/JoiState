@@ -21,7 +21,7 @@ describe('test confusable paths in computers/observers', function () {
     };
     let counter = 0;
     const observeOne = function (a, b) {
-      window["whatever_" + counter++] = computeOne(a, b);
+      window["whatever_" + counter++] = JSON.stringify(a) + JSON.stringify(b);
     };
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_d1", computeOne, ["a.b", "c"]);
@@ -32,10 +32,10 @@ describe('test confusable paths in computers/observers', function () {
     state.bindObserve(observeOne, ["a.b", "c"]);
     state.bindObserve(observeOne, ["a", "b.c"]);          // same observer function, different paths
     state.bindObserve(computeOne, ["a", "b.c"]);          // should not throw any Errors
-    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "whatever", "state-changed");
+    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "JohnSmith", "state-changed");
 
     const testValue = Object.assign({}, startState);
-    testValue.user = "whatever";
+    testValue.user = "JohnSmith";
     testValue._d1 = "21";
     testValue._d2 = '{"b":2}9';
     testValue._d3 = '{"b":2}9';
