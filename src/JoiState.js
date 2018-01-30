@@ -6,8 +6,7 @@ class JoiState {
     this.state = JoiGraph.deepFreeze(initial || {});
     this.que = [];
 
-    this.history = [];
-    window.addEventListener("state-history-get", e => JoiState.emit("state-history", this.history));     //this object will fireAndSetGlobalVariable its history when queried.
+    this.history = new JoiHistory();
   }
 
   bindReduce(eventName, reducer, throttle = true) {
@@ -61,10 +60,7 @@ class JoiState {
         JoiState.emit("state-error", error);
       }
     }
-    const snapShot = JoiState._takeSnapshot(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, this.que);
-    this.history = [snapShot].concat(this.history);
-    // if (this.history.length > 100) this.history = this.history.slice(0,50);
-    JoiState.emit("state-history-changed", this.history);
+    this.history.addToHistory(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, start, this.que);
   }
 
   static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {

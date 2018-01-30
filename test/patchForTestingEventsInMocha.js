@@ -6,16 +6,7 @@
  * @param eventName
  * @param eventData
  */
-const fireAndSetGlobalVariable = function (eventName, eventData, outputName) {
-  const cb = function (ev) {
-    window[outputName] = ev.detail;
-    window.removeEventListener("state-changed", cb);
-  };
-  window.addEventListener("state-changed", cb);
-  window.dispatchEvent(new CustomEvent(eventName, {bubbles: true, composed: true, detail: eventData}));
-};
-
-const fireAndSetGlobalVariable2 = function (fireEventName, eventData, listenEventName, outputName) {
+const fireAndSetGlobalVariable = function (fireEventName, eventData, outputName, listenEventName) {
   const cb = function (ev) {
     window[outputName] = ev.detail;
     window.removeEventListener(listenEventName, cb);

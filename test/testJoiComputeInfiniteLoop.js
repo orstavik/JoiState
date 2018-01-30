@@ -120,7 +120,7 @@ describe('Infinite loop and NaN', function () {
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);   //infinite loop, when _b is updated,
     state.bindCompute("_c", sum, ["a", "_b"]);   // _c will need to be recalculated, and that triggers update of _b again
-    fireAndSetGlobalVariable2(reducerEventName, 2, "state-error", computeTestValue);
+    fireAndSetGlobalVariable(reducerEventName, 2, computeTestValue, "state-error");
 
     let res = window[computeTestValue].toString();
     expect(expectedErrorMsg).to.be.equal(res);
@@ -136,7 +136,7 @@ describe('Infinite loop and NaN', function () {
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);   //infinite loop, when _b is updated,
     state.bindCompute("_c", sum, ["a", "_b"]);   // _c will need to be recalculated, and that triggers update of _b again
-    fireAndSetGlobalVariable(reducerEventName, 2, computeTestValue);
+    fireAndSetGlobalVariable(reducerEventName, 2, computeTestValue, "state-changed");
 
     expect(window[computeTestValue].a).to.be.equal(2);
     expect(window[computeTestValue]._b).to.be.NaN;
