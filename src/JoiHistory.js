@@ -15,7 +15,7 @@ class JoiHistory {
 
   static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, start, que) {
     task.taskName = task.reducer.name;
-    task.event = {type: event.type, detail: event.detail};
+    task.event = {type: task.event.type, detail: task.event.detail};
     task.start = start;
     task.stop = performance.now();
     return {
