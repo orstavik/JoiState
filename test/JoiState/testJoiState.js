@@ -1,28 +1,45 @@
 describe('test of JoiState', function () {
 
-  const reducerEventName = 'state-test-one';
-  const startState = {
-    a: "a string"
-  };
-  const state = new JoiState(startState);
-
   it("new JoiState", function () {
+    const startState = {
+      a: "a string"
+    };
+    const state = new JoiState(startState);
     expect(state.state).to.deep.equal({a: "a string"});
   });
 
   it("reducer", function () {
 
+    const testValue = {a: "a string", reducerOne: "reduceData"};
+    const startState = {
+      a: "a string"
+    };
     const reducerOne = function (state, detail) {
       return JoiGraph.setIn(state, "reducerOne", detail);
     };
-    state.bindReduce(reducerEventName, reducerOne, true);
-    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData", "state-changed");
-
-    const testValue = {a: "a string", reducerOne: "reduceData"};
-    expect(window[computeTestValue1]).to.deep.equal(testValue);
+    const state = new JoiState(startState);
+    state.bindReduce('state-test-one', reducerOne, true);
+    state.bindOnEnd((newState)=>{
+      console.log(1);
+      expect(newState).to.deep.equal(testValue);
+      state.detachReducers();
+    });
+    window.dispatchEvent(new CustomEvent('state-test-one', {bubbles: true, composed: true, detail: "reduceData"}));
   });
 
   it("two computes", function () {
+    let testValue = {
+      a: "a string",
+      reducerOne: "reduceData2",
+      _computeOne: "a stringreduceData2",
+      _computeTwo: "a stringreduceData2|a string"
+    };
+    const startState = {
+      a: "a string"
+    };
+    const reducerOne = function (state, detail) {
+      return JoiGraph.setIn(state, "reducerOne", detail);
+    };
     const computeOne = function (a, testOne) {
       return a + testOne;
     };
@@ -31,34 +48,52 @@ describe('test of JoiState', function () {
       return _computeOne + "|" + a;
     };
 
+    const state = new JoiState(startState);
+    state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
-
-    let testValue = {
-      a: "a string",
-      reducerOne: "reduceData2",
-      _computeOne: "a stringreduceData2",
-      _computeTwo: "a stringreduceData2|a string"
-    };
-
-    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData2", "state-changed");
-    expect(window[computeTestValue1]).to.deep.equal(testValue);
+    state.bindOnEnd((newState)=>{
+      console.log(2);
+      expect(newState).to.deep.equal(testValue);
+      state.detachReducers();
+    });
+    window.dispatchEvent(new CustomEvent('state-test-two', {bubbles: true, composed: true, detail: "reduceData2"}));
   });
 
   it("observer", function () {
-    const observeOne = function (prop) {
-      window.computeTwoTestValue = prop;
-    };
-    state.bindObserve(observeOne, ["_computeTwo"]);
     let testValue = {
       a: "a string",
       reducerOne: "reduceData",
       _computeOne: "a stringreduceData",
       _computeTwo: "a stringreduceData|a string"
     };
+    const startState = {
+      a: "a string"
+    };
+    const reducerOne = function (state, detail) {
+      return JoiGraph.setIn(state, "reducerOne", detail);
+    };
+    const computeOne = function (a, testOne) {
+      return a + testOne;
+    };
+    const computeTwo = function (_computeOne, a) {
+      return _computeOne + "|" + a;
+    };
+    const observeOne = function (prop) {
+      window.computeTwoTestValue = prop;
+    };
 
-    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData", "state-changed");
-    expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-    expect(window[computeTestValue1]).to.deep.equal(testValue);
+    const state = new JoiState(startState);
+    state.bindReduce('state-test-three', reducerOne, true);
+    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
+    state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
+    state.bindObserve(observeOne, ["_computeTwo"]);
+    state.bindOnEnd((newState)=>{
+      console.log(3);
+      expect(newState).to.deep.equal(testValue);
+      expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
+      state.detachReducers();
+    });
+    window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));
   });
 });

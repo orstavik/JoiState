@@ -1,6 +1,7 @@
 class JoiState {
 
   constructor(initial) {
+    this.listeners = {};
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(0);
     this.onEndFunctions = [];
@@ -8,7 +9,9 @@ class JoiState {
   }
 
   bindReduce(eventName, reducer) {
-    window.addEventListener(eventName, event => this._run({event, reducer, start: performance.now()}));
+    const listener = event => this._run({event, reducer, start: performance.now()});
+    this.listeners[eventName] = listener;
+    window.addEventListener(eventName, listener);
   }
 
   bindCompute(returnProp, computeFunc, argsAsStrings) {
@@ -19,7 +22,7 @@ class JoiState {
     this.observer.bind(observeFunc, argsAsStrings);
   }
 
-  bindOnEnd(func){
+  bindOnEnd(func) {
     this.onEndFunctions.push(func);
   }
 
@@ -40,10 +43,26 @@ class JoiState {
       }
     }
     for (let func of this.onEndFunctions)
-      func(this.state, {task, error, startState, reducedState, computerInfo: this.computer, observerInfo: this.observer});
+      func(this.state, {
+        task,
+        error,
+        startState,
+        reducedState,
+        computerInfo: this.computer,
+        observerInfo: this.observer
+      });
   }
 
   static emit(name, detail) {
     return window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
+  }
+
+  detachReducer(eventName){
+    window.removeEventListener(eventName, this.listeners[eventName]);
+  }
+
+  detachReducers() {
+    for (let eventName in this.listeners)
+      this.detachReducer(eventName);
   }
 }
