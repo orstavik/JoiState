@@ -16,10 +16,10 @@ describe('test of JoiState', function () {
       return JoiGraph.setIn(state, "reducerOne", detail);
     };
     state.bindReduce(reducerEventName, reducerOne, true);
-    fireAndSetGlobalVariable(reducerEventName, "reduceData", "computeTestValue1", "state-changed");
+    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData", "state-changed");
 
     const testValue = {a: "a string", reducerOne: "reduceData"};
-    expect(window["computeTestValue1"]).to.deep.equal(testValue);
+    expect(window[computeTestValue1]).to.deep.equal(testValue);
   });
 
   it("two computes", function () {
@@ -41,8 +41,8 @@ describe('test of JoiState', function () {
       _computeTwo: "a stringreduceData2|a string"
     };
 
-    fireAndSetGlobalVariable(reducerEventName, "reduceData2", "computeTestValue1", "state-changed");
-    expect(window["computeTestValue1"]).to.deep.equal(testValue);
+    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData2", "state-changed");
+    expect(window[computeTestValue1]).to.deep.equal(testValue);
   });
 
   it("observer", function () {
@@ -57,8 +57,8 @@ describe('test of JoiState', function () {
       _computeTwo: "a stringreduceData|a string"
     };
 
-    fireAndSetGlobalVariable(reducerEventName, "reduceData", "computeTestValue1", "state-changed");
+    const computeTestValue1 = fireAndSetGlobalVariable(reducerEventName, "reduceData", "state-changed");
     expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-    expect(window["computeTestValue1"]).to.deep.equal(testValue);
+    expect(window[computeTestValue1]).to.deep.equal(testValue);
   });
 });

@@ -1,16 +1,19 @@
 /**
- * this function
- * 1) adds a one time listener for the state-changed event,
- * 2) it takes the state (detail) coming from this event and sets it as a global variable on window
- * 3) it the fires an event that is supposed to trigger the state with the eventData
- * @param eventName
+ * fireAndSetGlobalVariable is a custom function for:
+ * a) fireing an event on the window.
+ * b) listening for another event name and adding the detail of that event to the window object.
+ * @param fireEventName
  * @param eventData
+ * @param listenEventName
  */
-const fireAndSetGlobalVariable = function (fireEventName, eventData, outputName, listenEventName) {
+const fireAndSetGlobalVariable = function (fireEventName, eventData, listenEventName) {
+  outputName = listenEventName + fireAndSetGlobalVariableCounter++;
   const cb = function (ev) {
     window[outputName] = ev.detail;
     window.removeEventListener(listenEventName, cb);
   };
   window.addEventListener(listenEventName, cb);
   window.dispatchEvent(new CustomEvent(fireEventName, {bubbles: true, composed: true, detail: eventData}));
+  return outputName;
 };
+let fireAndSetGlobalVariableCounter = 0;

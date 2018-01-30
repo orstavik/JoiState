@@ -1,7 +1,6 @@
 describe('test 2 of JoiState', function () {
 
   const reducerEventName = 'state-test-two';
-  const computeTestValue = "computeTestValue2";
   const startState = {
     users: {
       ab: "AB",
@@ -25,7 +24,7 @@ describe('test 2 of JoiState', function () {
     };
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    fireAndSetGlobalVariable(reducerEventName, "ab", computeTestValue, "state-changed");
+    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "ab", "state-changed");
 
     const testValue = Object.assign({}, startState);
     testValue.user = "ab";
@@ -42,7 +41,7 @@ describe('test 2 of JoiState', function () {
     };
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    fireAndSetGlobalVariable(reducerEventName, "ba", computeTestValue, "state-changed");
+    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "ba", "state-changed");
 
     const testValue = Object.assign({}, startState);
     testValue.user = "ba";

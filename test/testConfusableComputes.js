@@ -1,7 +1,6 @@
 describe('test confusable paths in computers/observers', function () {
 
   const reducerEventName = 'state-test-three';
-  const computeTestValue = "computeTestValue3";
   const startState = {
     a: {
       b: 2
@@ -33,7 +32,7 @@ describe('test confusable paths in computers/observers', function () {
     state.bindObserve(observeOne, ["a.b", "c"]);
     state.bindObserve(observeOne, ["a", "b.c"]);          // same observer function, different paths
     state.bindObserve(computeOne, ["a", "b.c"]);          // should not throw any Errors
-    fireAndSetGlobalVariable(reducerEventName, "whatever", computeTestValue, "state-changed");
+    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "whatever", "state-changed");
 
     const testValue = Object.assign({}, startState);
     testValue.user = "whatever";
