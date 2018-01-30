@@ -6,6 +6,10 @@ class JoiState {
     this.observer = new JoiCompute(1);
     this.onEndFunctions = [];
     this.state = JoiGraph.deepFreeze(initial || {});
+    this.startState = {};
+    this.reducedState = {};
+    this.task = {};
+    this.failed = false;
   }
 
   destructor() {
@@ -36,16 +40,17 @@ class JoiState {
   }
 
   _run(task) {
-    let startState = this.state;
-    let reducedState = task.reducer(startState, task.event.detail);  //1. reduce
-    if (startState !== reducedState) {
-      let computedState = this.computer.update(reducedState);        //2. compute
-      this.observer.update(computedState);                           //3. observe
-      this.state = computedState;
+    this.task = task;
+    this.failed = true;
+    this.reducedState = null;
+    this.startState = this.state;
+    this.reducedState = task.reducer(this.startState, task.event.detail);  //1. reduce
+    if (this.startState !== this.reducedState) {
+      this.state = this.computer.update(this.reducedState);        //2. compute
+      this.observer.update(this.state);                           //3. observe
+      this.failed = false;
     }
-    let computerInfo = this.computer;
-    let observerInfo = this.observer;
     for (let func of this.onEndFunctions)
-      func(this.state, {task, startState, reducedState, computerInfo, observerInfo});
+      func(this.state);
   }
 }

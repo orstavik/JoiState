@@ -13,8 +13,8 @@ describe('test of JoiHistory', function () {
   const startState = {
     a: "a string"
   };
-  const state = new JoiState(startState);
-  const history = new JoiHistory(state);
+  const state = new JoiStateWithHistory(startState);
+  // const history = new JoiHistory(state);
   state.bindReduce('history-test-one', reducerOne, true);
   state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
   state.bindObserve(observeOne, ["_computeTwo"]);
@@ -53,7 +53,7 @@ describe('test of JoiHistory', function () {
             argsPaths: ["_computeTwo"]
           }
         },
-        que: []
+        failed: false
       }
     ];
     let notInTest = [

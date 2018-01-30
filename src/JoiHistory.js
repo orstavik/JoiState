@@ -1,20 +1,26 @@
-class JoiHistory {
+class JoiStateWithHistory extends JoiState {
 
-  constructor(state) {
+  constructor(initState) {
+    super(initState);
     this.history = [];
-    state.bindOnEnd(this.addToHistory.bind(this));
-    // window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
-    //this object will fireAndSetGlobalVariable its history when queried.
+    window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
   }
 
-  addToHistory(state, debugInfo) {
-    debugInfo.task = JoiHistory._simplifyTask(debugInfo.task);
-    debugInfo.newState = state;
-    debugInfo.computerInfo = debugInfo.computerInfo.functionsRegister;
-    debugInfo.observerInfo = debugInfo.observerInfo.functionsRegister;
-    this.history = [debugInfo].concat(this.history);
-    // if (this.history.length > 100) this.history = this.history.slice(0,50);
-    JoiHistory.fire("state-history-changed", this.history);
+  _run(task) {
+    super._run(task);
+    this.history = [this._getHistoryData()].concat(this.history);
+    JoiStateWithHistory.fire("state-history-changed", this.history);
+  }
+
+  _getHistoryData() {
+    let computerInfo = this.computer.functionsRegister;
+    let observerInfo = this.observer.functionsRegister;
+    let startState = this.startState;
+    let reducedState = this.reducedState;
+    let task = JoiStateWithHistory._simplifyTask(this.task);
+    let failed = this.failed;
+    let newState = this.state;
+    return {newState, task, startState, reducedState, computerInfo, observerInfo, failed};
   }
 
   static _simplifyTask(task) {
@@ -29,16 +35,3 @@ class JoiHistory {
     window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
   }
 }
-
-// class tww extends JoiState {
-//
-//   constructor(initState) {
-//     super(initState);
-//     this.history = [];
-//   }
-//
-//   _run(task) {
-//     super._run(task);
-//     this.history = [task].concat(this.history);
-//   }
-// }
