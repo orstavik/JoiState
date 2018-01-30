@@ -3,9 +3,8 @@ class JoiState {
   constructor(initial) {
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(0);
+    this.onEndFunctions = [];
     this.state = JoiGraph.deepFreeze(initial || {});
-    this.que = [];
-    this.history = new JoiHistory();
   }
 
   bindReduce(eventName, reducer) {
@@ -18,6 +17,10 @@ class JoiState {
 
   bindObserve(observeFunc, argsAsStrings) {
     this.observer.bind(observeFunc, argsAsStrings);
+  }
+
+  bindOnEnd(func){
+    this.onEndFunctions.push(func);
   }
 
   _run(task) {
@@ -36,7 +39,8 @@ class JoiState {
         JoiState.emit("state-error", error);
       }
     }
-    this.history.addToHistory(error, startState, reducedState, computedState, this.state, task, this.computer, this.observer, this.que);
+    for (let func of this.onEndFunctions)
+      func(this.state, error, startState, reducedState, computedState, task, this.computer, this.observer);
   }
 
   static emit(name, detail) {

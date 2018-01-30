@@ -6,14 +6,14 @@ class JoiHistory {
     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
-  addToHistory(error, startState, reducedState, computedState, state, task, computer, observer, que) {
-    const snapShot = JoiHistory._takeSnapshot(error, startState, reducedState, computedState, state, task, computer, observer, que);
+  addToHistory(state, error, startState, reducedState, computedState, task, computer, observer) {
+    const snapShot = JoiHistory._takeSnapshot(error, startState, reducedState, computedState, state, task, computer, observer);
     this.history = [snapShot].concat(this.history);
     // if (this.history.length > 100) this.history = this.history.slice(0,50);
     JoiState.emit("state-history-changed", this.history);
   }
 
-  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo, que) {
+  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo) {
     task.taskName = task.reducer.name;
     task.event = {type: task.event.type, detail: task.event.detail};
     task.timeOrigin = performance.timeOrigin;
@@ -26,8 +26,7 @@ class JoiHistory {
       newState,
       task,
       computerInfo: computerInfo.functionsRegister,
-      observerInfo: observerInfo.functionsRegister,
-      que: que.slice(0)
+      observerInfo: observerInfo.functionsRegister
     };
   }
 }
