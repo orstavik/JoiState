@@ -6,28 +6,21 @@ class JoiHistory {
     //this object will fireAndSetGlobalVariable its history when queried.
   }
 
-  addToHistory(state, error, startState, reducedState, computedState, task, computer, observer) {
-    const snapShot = JoiHistory._takeSnapshot(error, startState, reducedState, computedState, state, task, computer, observer);
-    this.history = [snapShot].concat(this.history);
+  addToHistory(state, debugInfo) {
+    debugInfo.task = JoiHistory._simplifyTask(debugInfo.task);
+    debugInfo.newState = state;
+    debugInfo.computerInfo = debugInfo.computerInfo.functionsRegister;
+    debugInfo.observerInfo = debugInfo.observerInfo.functionsRegister;
+    this.history = [debugInfo].concat(this.history);
     // if (this.history.length > 100) this.history = this.history.slice(0,50);
     JoiState.emit("state-history-changed", this.history);
   }
 
-  static _takeSnapshot(error, startState, reducedState, computedState, newState, task, computerInfo, observerInfo) {
-    task.taskName = task.reducer.name;
-    task.event = {type: task.event.type, detail: task.event.detail};
-    task.timeOrigin = performance.timeOrigin;
+  static _simplifyTask(task) {
     task.stop = performance.now();
-    return {
-      error,
-      startState,
-      reducedState,
-      computedState,
-      newState,
-      task,
-      computerInfo: computerInfo.functionsRegister,
-      observerInfo: observerInfo.functionsRegister
-    };
+    task.timeOrigin = performance.timeOrigin;
+    task.event = {type: task.event.type, detail: task.event.detail};
+    task.taskName = task.reducer.name;
+    return task;
   }
 }
-

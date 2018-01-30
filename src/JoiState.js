@@ -25,12 +25,12 @@ class JoiState {
 
   _run(task) {
     let startState = this.state;
-    let reducedState = task.reducer(startState, task.event.detail);         //1. reduce
+    let reducedState = task.reducer(startState, task.event.detail);  //1. reduce
     let computedState, error;
     if (startState !== reducedState) {
       try {
-        computedState = this.computer.update(reducedState);                 //2. compute
-        this.observer.update(computedState);                                //3. observe
+        computedState = this.computer.update(reducedState);          //2. compute
+        this.observer.update(computedState);                         //3. observe
         this.state = computedState;
         JoiState.emit("state-changed", this.state);
       } catch (err) {
@@ -40,7 +40,7 @@ class JoiState {
       }
     }
     for (let func of this.onEndFunctions)
-      func(this.state, error, startState, reducedState, computedState, task, this.computer, this.observer);
+      func(this.state, {task, error, startState, reducedState, computerInfo: this.computer, observerInfo: this.observer});
   }
 
   static emit(name, detail) {
