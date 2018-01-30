@@ -29,21 +29,15 @@ class JoiState {
   _run(task) {
     let startState = this.state;
     let reducedState = task.reducer(startState, task.event.detail);  //1. reduce
-    let computedState, error;
     if (startState !== reducedState) {
-      computedState = this.computer.update(reducedState);            //2. compute
+      let computedState = this.computer.update(reducedState);        //2. compute
       this.observer.update(computedState);                           //3. observe
       this.state = computedState;
-      JoiState.fire("state-changed", this.state);
     }
     let computerInfo = this.computer;
     let observerInfo = this.observer;
     for (let func of this.onEndFunctions)
-      func(this.state, {task, error, startState, reducedState, computerInfo, observerInfo});
-  }
-
-  static fire(name, detail) {
-    window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
+      func(this.state, {task, startState, reducedState, computerInfo, observerInfo});
   }
 
   detachReducer(eventName) {

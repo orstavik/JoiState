@@ -1,18 +1,17 @@
 describe('test confusable paths in computers/observers', function () {
 
-  const reducerEventName = 'state-test-three';
-  const startState = {
-    a: {
-      b: 2
-    },
-    b: {
-      c: 9
-    },
-    c: 1
-  };
-  const state = new JoiState(startState);
+  it("confusable computers / observers", function (done) {
+    const startState = {
+      a: {
+        b: 2
+      },
+      b: {
+        c: 9
+      },
+      c: 1
+    };
+    const state = new JoiState(startState);
 
-  it("confusable computers / observers", function () {
     const reducerOne = function (state, detail) {
       return JoiGraph.setIn(state, "user", detail);
     };
@@ -23,7 +22,7 @@ describe('test confusable paths in computers/observers', function () {
     const observeOne = function (a, b) {
       window["whatever_" + counter++] = JSON.stringify(a) + JSON.stringify(b);
     };
-    state.bindReduce(reducerEventName, reducerOne, true);
+    state.bindReduce('state-test-three', reducerOne, true);
     state.bindCompute("_d1", computeOne, ["a.b", "c"]);
     state.bindCompute("_d2", computeOne, ["a", "b.c"]);   // same computer function, different paths and return value
     state.bindCompute("_d3", computeOne, ["a", "b.c"]);   // same computer function, different return value only
@@ -32,7 +31,6 @@ describe('test confusable paths in computers/observers', function () {
     state.bindObserve(observeOne, ["a.b", "c"]);
     state.bindObserve(observeOne, ["a", "b.c"]);          // same observer function, different paths
     state.bindObserve(computeOne, ["a", "b.c"]);          // should not throw any Errors
-    const computeTestValue = fireAndSetGlobalVariable(reducerEventName, "JohnSmith", "state-changed");
 
     const testValue = Object.assign({}, startState);
     testValue.user = "JohnSmith";
@@ -40,9 +38,14 @@ describe('test confusable paths in computers/observers', function () {
     testValue._d2 = '{"b":2}9';
     testValue._d3 = '{"b":2}9';
     testValue._d4 = '{"b":2}9';
-    expect(window[computeTestValue]).to.deep.equal(testValue);
-    expect(window.whatever_0).to.be.equal("21");
-    expect(window.whatever_1).to.be.equal('{"b":2}9');
+    state.bindOnEnd(newState=> {
+      expect(newState).to.deep.equal(testValue);
+      expect(window.whatever_0).to.be.equal("21");
+      expect(window.whatever_1).to.be.equal('{"b":2}9');
+      state.detachReducers();
+      done();
+    });
+    window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "JohnSmith"}));
   });
 });
 
