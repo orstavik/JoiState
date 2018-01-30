@@ -20,7 +20,6 @@ describe('test of JoiState', function () {
     const state = new JoiState(startState);
     state.bindReduce('state-test-one', reducerOne, true);
     state.bindOnEnd((newState)=>{
-      console.log(1);
       expect(newState).to.deep.equal(testValue);
       state.detachReducers();
       done();
@@ -54,7 +53,6 @@ describe('test of JoiState', function () {
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
     state.bindOnEnd((newState)=>{
-      console.log(2);
       expect(newState).to.deep.equal(testValue);
       state.detachReducers();
       done();
@@ -91,7 +89,6 @@ describe('test of JoiState', function () {
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
     state.bindOnEnd((newState)=>{
-      console.log(3);
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
       state.detachReducers();

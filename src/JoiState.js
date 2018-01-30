@@ -31,16 +31,10 @@ class JoiState {
     let reducedState = task.reducer(startState, task.event.detail);  //1. reduce
     let computedState, error;
     if (startState !== reducedState) {
-      try {
-        computedState = this.computer.update(reducedState);          //2. compute
-        this.observer.update(computedState);                         //3. observe
-        this.state = computedState;
-        JoiState.fire("state-changed", this.state);
-      } catch (err) {
-        console.error(err);
-        error = err;
-        JoiState.fire("state-error", error);
-      }
+      computedState = this.computer.update(reducedState);            //2. compute
+      this.observer.update(computedState);                           //3. observe
+      this.state = computedState;
+      JoiState.fire("state-changed", this.state);
     }
     let computerInfo = this.computer;
     let observerInfo = this.observer;
@@ -57,7 +51,7 @@ class JoiState {
   }
 
   detachReducers() {
-    for (let eventName in this.listeners)
-      this.detachReducer(eventName);
+    for (let type in this.listeners)
+      this.detachReducer(type);
   }
 }
