@@ -22,7 +22,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     const state = new JoiState();
     state.bindReduce('state-test-fail', reducerFail, true);
     //the error is thrown out as a global error, so you need to capture
-    window.onerror = function (a, b, c, d, error) {
+    state.onError = function (error) {
       expect("Error: i should fail").to.be.equal(error.toString());
       state.destructor();
       done();
@@ -41,7 +41,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     state.bindReduce('state-test-fail', reducerFail, true);
     state.bindReduce('state-test-working', reducerOne, true);
     //the error is thrown out as a global error, so you need to capture it on window
-    window.onerror = function (a, b, c, d, error) {
+    state.onError = function (error) {
       expect("Error: i should fail").to.be.equal(error.toString());
     };
     state.onComplete = function (newState) {
@@ -65,7 +65,7 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     state.bindCompute("_b", sum, ["a", "_c"]);   //infinite loop, when _b is updated,
     state.bindCompute("_c", sum, ["a", "_b"]);   // _c will need to be recalculated, and that triggers update of _b again
     //the error is thrown out as a global error, so you need to capture
-    window.onerror = function (a, b, c, d, error) {
+    state.onError = function (error) {
       expect(expectedErrorMsg).to.be.equal(error.toString());
       state.destructor();
       done();

@@ -58,16 +58,30 @@ class JoiState {
   }
 
   _run(task) {
-    this.task = task;
-    this.failed = true;
-    this.reducedState = null;
-    this.startState = this.state;
-    this.reducedState = task.reducer(this.startState, task.event.detail);  //1. reduce
-    if (this.startState !== this.reducedState) {
-      this.state = this.computer.update(this.reducedState);                //2. compute
-      this.observer.update(this.state);                                    //3. observe
-      this.failed = false;
+    let error;
+    try {
+      this.task = task;
+      this.failed = true;
+      this.reducedState = null;
+      this.startState = this.state;
+      this.reducedState = task.reducer(this.startState, task.event.detail);  //1. reduce
+      if (this.startState !== this.reducedState) {
+        this.state = this.computer.update(this.reducedState);                //2. compute
+        this.observer.update(this.state);                                    //3. observe
+        this.failed = false;
+      }
+      this.onComplete(this.state);
+    } catch (err) {
+      this.onError(error = err);
+    } finally {
+      this.onDebug(
+        task,
+        this.startState,
+        this.reducedState,
+        this.state,
+        this.computer.functionsRegister,
+        this.observer.functionsRegister,
+        error);
     }
-    this.onComplete(this.state);
   }
 }
