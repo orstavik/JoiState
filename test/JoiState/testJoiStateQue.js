@@ -1,28 +1,33 @@
-describe('JoiState loop problem', function () {
+describe('JoiState Que', function () {
 
-  it("Event thrown from observers that trigger new reducer actions must be queued. " +
-    "Loop that never ends problem, ensure that events triggered by observes are queued", function (done) {
+  it("Event thrown from observers that trigger new reducer actions must be queued.", function (done) {
 
     const reducerOne = function (state, detail) {
       return JoiGraph.setIn(state, "a", detail);
     };
+    const reducerTwo = function (state, detail) {
+      return JoiGraph.setIn(state, "b", detail);
+    };
     const observeOne = function (a) {
       window.dispatchEvent(new CustomEvent('state-test-observe-event', {detail: "B"}));
     };
+    const observeTwo = function (a) {
+      window.dispatchEvent(new CustomEvent('state-test-observe-event-2', {detail: "C"}));
+    };
     const state = new JoiState();
     state.bindReduce('state-test-observe-event', reducerOne, true);
+    state.bindReduce('state-test-observe-event-2', reducerTwo, true);
     state.bindObserve(observeOne, ["a"]);
+    state.bindObserve(observeTwo, ["a"]);
 
     let count = 0;
     state.onComplete = function (newState) {
-      if (count === 0) {
+      if (count === 0)
         expect(newState).to.deep.equal({a: "A"});
-        firstTime = false;
-      } else {
+      else if (count === 1)
         expect(newState).to.deep.equal({a: "B"});
-      }
-      if (count === 2){
-        // state.destructor();
+      else if (count === 2) {
+        expect(newState).to.deep.equal({a: "B", b: "C"});
         done();
       }
       count++;
