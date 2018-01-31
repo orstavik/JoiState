@@ -1,26 +1,32 @@
-class JoiStateWithHistory extends JoiState {
+class JoiStateWithFullHistory extends JoiState {
 
   constructor(initState) {
     super(initState);
     this.history = [];
     window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
+    //todo this i should just query as joiState.history??
   }
 
-  _run(task) {
-    super._run(task);
-    this.history = [this._getHistoryData()].concat(this.history);
-    JoiStateWithHistory.fire("state-history-changed", this.history);
+  onComplete(newState, task, startState, reducedState, computer, observer, error) {
+    const snap = {
+      task: JoiStateWithFullHistory._simplifyTask(task),
+      newState,
+      startState,
+      reducedState,
+      computerInfo: computer.functionsRegister,
+      observerInfo: observer.functionsRegister,
+      error
+    };
+    this.history.push(snap);
+    this.onHistoryChanged(this.history);
   }
 
-  _getHistoryData() {
-    let computerInfo = this.computer.functionsRegister;
-    let observerInfo = this.observer.functionsRegister;
-    let startState = this.startState;
-    let reducedState = this.reducedState;
-    let task = JoiStateWithHistory._simplifyTask(this.task);
-    let failed = this.failed;
-    let newState = this.state;
-    return {newState, task, startState, reducedState, computerInfo, observerInfo, failed};
+  /**
+   * Hook! use this to do something whenever the history changes
+   */
+  onHistoryChanged(history){
+    //todo attach to this point directly instead of communicating through events.
+    JoiStateWithFullHistory.fire("state-history-changed", history);
   }
 
   static _simplifyTask(task) {
