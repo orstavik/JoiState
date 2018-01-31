@@ -90,10 +90,13 @@ describe('test of JoiState', function () {
     state.bindObserve(observeOne, ["_computeTwo"]);
     state.onComplete = newState => {
       expect(newState).to.deep.equal(testValue);
-      expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-      state.destructor();
-      done();
     };
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));
+    requestAnimationFrame(
+      function () {
+        expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
+        state.destructor();
+        done();
+      });
   });
 });
