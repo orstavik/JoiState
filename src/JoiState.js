@@ -54,7 +54,7 @@ class JoiState {
    * Hook. Called after every run triggered by a new action, both when the run completes and when it errors.
    * @param {{}} newState the state after reducer and all computers have finished processing.
    */
-  onDebug(task, startState, reducedState, newState, computerInfo, observerInfo, error) {
+  onDebug(task, startState, reducedState, newState, computer, observer, error) {
   }
 
   _run(task) {
@@ -79,8 +79,8 @@ class JoiState {
         this.startState,
         this.reducedState,
         this.state,
-        this.computer.functionsRegister,
-        this.observer.functionsRegister,
+        this.computer,
+        this.observer,
         error);
     }
   }
