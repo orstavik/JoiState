@@ -40,15 +40,12 @@ describe('test confusable paths in computers/observers', function () {
     testValue._d4 = '{"b":2}9';
     state.onComplete = newState => {
       expect(newState).to.deep.equal(testValue);
+      expect(window.whatever_0).to.be.equal("21");
+      expect(window.whatever_1).to.be.equal('{"b":2}9');
+      state.destructor();
+      done();
     };
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "JohnSmith"}));
-    requestAnimationFrame(
-      function () {
-        expect(window.whatever_0).to.be.equal("21");
-        expect(window.whatever_1).to.be.equal('{"b":2}9');
-        state.destructor();
-        done();
-      });
   });
 });
 

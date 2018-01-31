@@ -5,6 +5,7 @@ class JoiState {
     this.computer = new JoiCompute(100, false);
     this.observer = new JoiCompute(1, true);
     this.state = JoiGraph.deepFreeze(initial || {});
+    this.que = [];
   }
 
   destructor() {
@@ -37,8 +38,23 @@ class JoiState {
     }
   }
 
+  /**
+   * Que for
+   * @param task
+   * @private
+   */
+  _que(task){
+    this.que.push(task);
+    if (this.que.length >= 2) //someone else is already running the que, this flow of control resigns
+      return;
+    while (this.que.length > 0){
+      this._run(this.que[0]);
+      this.que.shift();
+    }
+  }
+
   bindReduce(eventName, reducer) {
-    this.reducers[eventName] = event => this._run({event, reducer, start: performance.now()});
+    this.reducers[eventName] = event => this._que({event, reducer, start: performance.now()});
     window.addEventListener(eventName, this.reducers[eventName]);
   }
 

@@ -88,7 +88,7 @@ class JoiCompute {
       }
 
       functionsRun.push(funcObj);
-      let newComputedValue = observe ? requestAnimationFrame(()=> funcObj.func.apply(null, argValues)): funcObj.func.apply(null, argValues);
+      let newComputedValue = funcObj.func.apply(null, argValues);
 
       perFuncOldPathsCache = Object.assign({}, perFuncOldPathsCache);
       perFuncOldPathsCache[funKy] = pathsCache;
