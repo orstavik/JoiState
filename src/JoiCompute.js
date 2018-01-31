@@ -1,3 +1,10 @@
+class JoiStateStackOverflowError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'JoiStateStackOverflowError';
+  }
+}
+
 /**
  * The JoiCompute is a virtual machine for both computing and/or observing functions.
  * Both compute and observe functions should only run when the values of the argument paths that they
@@ -110,9 +117,9 @@ class JoiCompute {
 
   static checkStackCount(stackRemainderCount, stack) {
     if (stackRemainderCount < stack.length) {
-      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ") + "]");
-      throw new Error(
-        "StackOverFlowError in JoiCompute (JoiState), probably an infinite loop.\n" +
+      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ") + "]").slice(0,10);
+      throw new JoiStateStackOverflowError(
+        "Infinite loop or too complex computes in JoiState.\n" +
         functions.join("\n")
       );
     }
