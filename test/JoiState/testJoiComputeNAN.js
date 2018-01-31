@@ -16,12 +16,12 @@ describe('compute handles NaN correctly', function () {
     state.bindReduce(reducerEventName, reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);   //infinite loop, when _b is updated,
     state.bindCompute("_c", sum, ["a", "_b"]);   // _c will need to be recalculated, and that triggers update of _b again
-    state.bindOnEnd(newState => {
+    state.onComplete = newState => {
       expect(newState.a).to.be.equal(2);
       expect(newState._b).to.be.NaN;
       expect(newState._c).to.be.NaN;
       done();
-    });
+    };
     window.dispatchEvent(new CustomEvent(reducerEventName, {bubbles: true, composed: true, detail: 2}));
   });
 });

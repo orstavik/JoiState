@@ -44,11 +44,11 @@ describe('Error handling (ATT!! These tests fail due to CORS policy if they are 
     window.onerror = function (a, b, c, d, error) {
       expect("Error: i should fail").to.be.equal(error.toString());
     };
-    state.bindOnEnd(function (newState) {
+    state.onComplete = function (newState) {
       expect(newState.a).to.be.equal(3);
       state.destructor();
       done();
-    });
+    };
     window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true, detail: null}));
     window.dispatchEvent(new CustomEvent('state-test-working', {bubbles: true, composed: true, detail: 3}));
   });

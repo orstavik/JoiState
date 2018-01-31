@@ -23,11 +23,11 @@ describe('test 2 of JoiState', function () {
     };
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnEnd(function (newState) {
+    state.onComplete = function (newState) {
       expect(newState).to.deep.equal(endState);
       state.destructor();
       done();
-    });
+    };
     window.dispatchEvent(new CustomEvent('state-test-two', {composed:true, bubbles:true, detail:"ab"}));
   });
 
@@ -57,11 +57,11 @@ describe('test 2 of JoiState', function () {
     };
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnEnd(function (newState) {
+    state.onComplete = function (newState) {
       expect(newState).to.deep.equal(endState);
       state.destructor();
       done();
-    });
+    };
     window.dispatchEvent(new CustomEvent('state-test-two', {composed:true, bubbles:true, detail:"ba"}));
   });
 });
