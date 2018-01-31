@@ -2,8 +2,8 @@ class JoiState {
 
   constructor(initial) {
     this.reducers = {};
-    this.computer = new JoiCompute(100);
-    this.observer = new JoiCompute(1);
+    this.computer = new JoiCompute(100, false);
+    this.observer = new JoiCompute(1, true);
     this.state = JoiGraph.deepFreeze(initial || {});
   }
 
