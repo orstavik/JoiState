@@ -5,10 +5,6 @@ class JoiState {
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(1);
     this.state = JoiGraph.deepFreeze(initial || {});
-    this.startState = {};
-    this.reducedState = {};
-    this.task = {};
-    this.failed = false;
   }
 
   destructor() {
@@ -58,30 +54,19 @@ class JoiState {
   }
 
   _run(task) {
-    let error;
+    let error, startState, reducedState;
     try {
-      this.task = task;
-      this.failed = true;
-      this.reducedState = null;
-      this.startState = this.state;
-      this.reducedState = task.reducer(this.startState, task.event.detail);  //1. reduce
-      if (this.startState !== this.reducedState) {
-        this.state = this.computer.update(this.reducedState);                //2. compute
+      startState = this.state;
+      reducedState = task.reducer(startState, task.event.detail);  //1. reduce
+      if (startState !== reducedState) {
+        this.state = this.computer.update(reducedState);                //2. compute
         this.observer.update(this.state);                                    //3. observe
-        this.failed = false;
       }
       this.onComplete(this.state);
     } catch (err) {
       this.onError(error = err);
     } finally {
-      this.onDebug(
-        task,
-        this.startState,
-        this.reducedState,
-        this.state,
-        this.computer,
-        this.observer,
-        error);
+      this.onDebug(task, startState, reducedState, this.state, this.computer, this.observer, error);
     }
   }
 }
