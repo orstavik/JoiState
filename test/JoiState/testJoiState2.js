@@ -28,7 +28,7 @@ describe('test 2 of JoiState', function () {
       state.destructor();
       done();
     };
-    window.dispatchEvent(new CustomEvent('state-test-two', {composed:true, bubbles:true, detail:"ab"}));
+    window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ab"}));
   });
 
   it("add username and compute a child that is complex", function (done) {
@@ -62,7 +62,24 @@ describe('test 2 of JoiState', function () {
       state.destructor();
       done();
     };
-    window.dispatchEvent(new CustomEvent('state-test-two', {composed:true, bubbles:true, detail:"ba"}));
+    window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ba"}));
+  });
+
+  it("observe on empty string", function (done) {
+    const reducerOne = function (state, detail) {
+      return JoiGraph.setIn(state, "a", detail);
+    };
+    const onNewState = function (newState) {
+      expect(newState).to.deep.equal({a: "hello"});
+      state.destructor();
+      done();
+    };
+
+    const state = new JoiState({a: "a string"});
+    state.bindReduce('state-test-one', reducerOne, true);
+    state.bindObserve(onNewState, [""]);
+    window.dispatchEvent(new CustomEvent('state-test-one', {detail: "a string"})); //should not trigger observe on root
+    window.dispatchEvent(new CustomEvent('state-test-one', {detail: "hello"}));    //should trigger observe on root
   });
 });
 
