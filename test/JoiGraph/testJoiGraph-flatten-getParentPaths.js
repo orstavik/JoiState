@@ -1,4 +1,4 @@
-describe('JoiGraph.flatten', function () {
+describe('JoiGraph.flatten .getParentPaths .orderedAssign', function () {
 
   const tree = {a: {x: 1}, b: {y: {"12": "something"}}};
   const test1 = {
@@ -59,9 +59,7 @@ describe('JoiGraph.flatten', function () {
       "c": 3
     });
   });
-});
 
-describe('JoiGraph.getParentPaths', function () {
   it("JoiGraph.getParentPaths dot", function () {
     const paths = ["a.b.c", "a.d.e"];
     const parents = JoiGraph.getParentPaths(paths, ".");
@@ -73,14 +71,12 @@ describe('JoiGraph.getParentPaths', function () {
     const parents = JoiGraph.getParentPaths(paths, "/");
     expect(parents).to.deep.equal(["a/b", "a", "a/d"]);
   });
-});
 
-describe('JoiGraph.orderedAssign', function () {
   it("JoiGraph.orderedAssign", function () {
-    const A = {a:1,b:2, c:3};
-    const B = {a:11,d:12, e:13};
-    const C = JoiGraph.orderedAssign(A,B);
-    expect(C).to.deep.equal({a:11,d:12,e:13,b:2,c:3});
+    const A = {a: 1, b: 2, c: 3};
+    const B = {a: 11, d: 12, e: 13};
+    const C = JoiGraph.orderedAssign(A, B);
+    expect(C).to.deep.equal({a: 11, d: 12, e: 13, b: 2, c: 3});
     expect(["a", "d", "e", "b", "c"]).to.deep.equal(Object.keys(C));
   });
 });

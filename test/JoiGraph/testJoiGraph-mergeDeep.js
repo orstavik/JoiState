@@ -1,17 +1,16 @@
-const one = JoiGraph.make({
-  a: {
-    aa: {
-      aaa: 111
+describe('JoiGraph.mergeDeep', function () {
+
+  let one = {
+    a: {
+      aa: {
+        aaa: 111
+      },
+      ab: 12,
+      ac: 13
     },
-    ab: 12,
-    ac: 13
-  },
-  b: 2,
-  c: 3
-});
-
-describe('JoiGraph.mergeDeep: No changes', function () {
-
+    b: 2,
+    c: 3
+  };
   //merge B, result
   const tests = [
     [one, one, "one", "one"],
@@ -19,14 +18,11 @@ describe('JoiGraph.mergeDeep: No changes', function () {
     [{b: 2}, one, "{a: aa: {aaa: 111}}", "one"],
   ];
   for (let test of tests) {
-    it(`JoiGraph.mergeDeep(one, ${test[2]}) === ${test[3]}`, function () {
+    it(`JoiGraph.mergeDeep(one, ${test[2]}) === ${test[3]} - no changes`, function () {
       let two = JoiGraph.mergeDeepWithNullToDelete(one, test[0]);
       expect(test[1]).to.be.equal(two);
     });
   }
-});
-
-describe('JoiGraph.mergeDeep: Partial changes', function () {
 
   it("JoiGraph.mergeDeep(one, {a: 1}) === {a:1,b:2,c:3}. a changes, b and c no change", function () {
     let two = JoiGraph.mergeDeepWithNullToDelete(one, {a: 1});
@@ -50,9 +46,6 @@ describe('JoiGraph.mergeDeep: Partial changes', function () {
     expect(one).to.not.equal(two);
     expect(one.a).to.not.equal(two.a);
   });
-});
-
-describe('JoiGraph.mergeDeep: null to delete', function () {
 
   it("JoiGraph.mergeDeep(one, {a: null}) === {b:2,c:3}. Deleted a. Changed one. No change b and c", function () {
     let two = JoiGraph.mergeDeepWithNullToDelete(one, {a: null});
