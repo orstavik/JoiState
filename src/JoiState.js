@@ -1,3 +1,4 @@
+//todo rename to JoiStore to echo pattern names
 class JoiState {
 
   constructor(initial) {
@@ -26,7 +27,7 @@ class JoiState {
   _run(task) {
     let error, reducedState, startState = this.state;
     try {
-      reducedState = task.reducer(startState, task.event.detail);
+      reducedState = task.reducer(startState, task.event);
       if (startState !== reducedState) {
         this.state = this.computer.update(reducedState);
         this.observer.update(this.state);
@@ -53,22 +54,36 @@ class JoiState {
     }
   }
 
+  //todo rename addEventReducer??
   bindReduce(eventName, reducer) {
     this.reducers[eventName] = event => this._que({event, reducer, start: performance.now()});
     window.addEventListener(eventName, this.reducers[eventName]);
   }
 
+  //todo rename removeEventReducer??
   detachReducer(eventName) {
     window.removeEventListener(eventName, this.reducers[eventName]);
     delete this.reducers[eventName];
   }
 
+  //todo rename: compute(argsAsStrings, computeFunc, returnProp) to mirror redux naming
   bindCompute(returnProp, computeFunc, argsAsStrings) {
     this.computer.bind(computeFunc, argsAsStrings, returnProp);
   }
 
+  //todo rename: observe(argsAsStrings, observeFunc) to mirror redux naming
   bindObserve(observeFunc, argsAsStrings) {
     this.observer.bind(observeFunc, argsAsStrings);
+  }
+
+  //todo make tests
+  /**
+   * Trigger reducer directly.
+   * @param {Function} reducer a static function such as MyReducers.seducerFunction1
+   * @param {{}} payload the data object passed to the reducer as second argument.
+   */
+  dispatch(reducer, payload){
+    this._que({event: {detail: payload}, reducer, start: performance.now()});
   }
 
   /**

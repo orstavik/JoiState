@@ -2,8 +2,8 @@ describe('JoiState.onDebug', function () {
 
   it("test first run", function (done) {
 
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "reducerOne", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "reducerOne", e.detail);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -88,5 +88,4 @@ describe('JoiState.onDebug', function () {
     };
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
   });
-
 });

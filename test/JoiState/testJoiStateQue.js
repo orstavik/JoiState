@@ -2,11 +2,11 @@ describe('JoiState Que', function () {
 
   it("Event thrown from observers that trigger new reducer actions must be queued.", function (done) {
 
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "a", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "a", e.detail);
     };
-    const reducerTwo = function (state, detail) {
-      return JoiGraph.setIn(state, "b", detail);
+    const reducerTwo = function (state, e) {
+      return JoiGraph.setIn(state, "b", e.detail);
     };
     const observeOne = function (a) {
       window.dispatchEvent(new CustomEvent('state-test-observe-event', {detail: "B"}));

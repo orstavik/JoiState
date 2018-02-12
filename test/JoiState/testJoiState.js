@@ -14,8 +14,8 @@ describe('JoiState basics', function () {
     const startState = {
       a: "a string"
     };
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "reducerOne", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "reducerOne", e.detail);
     };
     const state = new JoiState(startState);
     state.bindReduce('state-test-one', reducerOne, true);
@@ -37,8 +37,8 @@ describe('JoiState basics', function () {
     const startState = {
       a: "a string"
     };
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "reducerOne", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "reducerOne", e.detail);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -70,8 +70,8 @@ describe('JoiState basics', function () {
     const startState = {
       a: "a string"
     };
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "reducerOne", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "reducerOne", e.detail);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -98,8 +98,8 @@ describe('JoiState basics', function () {
   });
 
   it(".bindObserve(func, ['']) - listen to changes on the entire state object", function (done) {
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "a", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "a", e.detail);
     };
     const onNewState = function (newState) {
       expect(newState).to.deep.equal({a: "hello"});
@@ -129,8 +129,8 @@ describe('JoiState basics', function () {
     endState._userName = "AB";
 
     const state = new JoiState(startState);
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "user", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "user", e.detail);
     };
     const computeOne = function (users, username) {
       return users[username];
@@ -163,8 +163,8 @@ describe('JoiState basics', function () {
     };
 
     const state = new JoiState(startState);
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "user", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "user", e.detail);
     };
     const computeOne = function (users, username) {
       return users[username];
@@ -180,8 +180,8 @@ describe('JoiState basics', function () {
   });
 
   it("NaN !== NaN. Values changing from NaN to NaN is not considered a change in JoiCompute", function (done) {
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "a", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "a", e.detail);
     };
     const sum = function (a, b) {
       return a + b;  //returns NaN when a or b is not a number
@@ -212,8 +212,8 @@ describe('JoiState basics', function () {
     };
     const state = new JoiState(startState);
 
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "user", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "user", e.detail);
     };
     const computeOne = function (a, b) {
       return JSON.stringify(a) + JSON.stringify(b);

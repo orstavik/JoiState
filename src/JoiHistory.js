@@ -3,20 +3,14 @@ class JoiStateWithFullHistory extends JoiState {
   constructor(initState) {
     super(initState);
     this.history = [];
-    window.addEventListener("state-history-get", e => JoiHistory.fire("state-history", this.history));
+    window.addEventListener("state-history-get", e =>
+      window.dispatchEvent(new CustomEvent("state-history", {detail: this.history}))
+    );
     //todo this i should just query as joiState.history??
   }
 
   onComplete(newState, task, startState, reducedState, computer, observer, error) {
-    const snap = {
-      task: JoiStateWithFullHistory._simplifyTask(task),
-      newState,
-      startState,
-      reducedState,
-      computerInfo: computer.functionsRegister,
-      observerInfo: observer.functionsRegister,
-      error
-    };
+    const snap = JoiStateWithFullHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
     this.history.push(snap);
     this.onHistoryChanged(this.history);
   }
@@ -26,7 +20,19 @@ class JoiStateWithFullHistory extends JoiState {
    */
   onHistoryChanged(history){
     //todo attach to this point directly instead of communicating through events.
-    JoiStateWithFullHistory.fire("state-history-changed", history);
+    window.dispatchEvent(new CustomEvent("state-history-changed", {detail: history}));
+  }
+
+  static makeSnap(task, newState, startState, reducedState, computer, observer, error) {
+    return {
+      task: JoiStateWithFullHistory._simplifyTask(task),
+      newState,
+      startState,
+      reducedState,
+      computerInfo: computer.functionsRegister,
+      observerInfo: observer.functionsRegister,
+      error
+    };
   }
 
   static _simplifyTask(task) {
@@ -35,9 +41,5 @@ class JoiStateWithFullHistory extends JoiState {
     task.event = {type: task.event.type, detail: task.event.detail};
     task.taskName = task.reducer.name;
     return task;
-  }
-
-  static fire(name, detail) {
-    window.dispatchEvent(new CustomEvent(name, {composed: true, bubbles: true, detail: detail}));
   }
 }

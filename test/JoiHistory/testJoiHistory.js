@@ -68,8 +68,8 @@ describe('JoiHistory', function () {
       "observerInfo.undefined = observeOne(_computeTwo).func"
     ];
 
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "reducerOne", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "reducerOne", e.detail);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -99,11 +99,5 @@ describe('JoiHistory', function () {
     };
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
-
-    // const result = fireAndSetGlobalVariable('history-test-one', "reduceData", "state-history-changed");
-    // const history = window[result];
-    // expect(history.length).to.be.equal(1);
-    // let diff = Object.keys(JoiGraph.flatten(JoiGraph.filterDeep(history[0], testValue1[0])));
-    // expect(diff).to.deep.equal(notInTest);
   });
 });

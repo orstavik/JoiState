@@ -15,8 +15,8 @@ describe('JoiState Errors', function () {
   });
 
   it("JoiState still works after error", function (done) {
-    const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "a", detail);
+    const reducerOne = function (state, e) {
+      return JoiGraph.setIn(state, "a", e.detail);
     };
     const reducerFail = function (state, detail) {
       throw new Error("i should fail");
@@ -72,7 +72,4 @@ describe('JoiState Errors', function () {
     };
     window.dispatchEvent(new CustomEvent('state-test-infinte', {bubbles: true, composed: true, detail: 2}));
   });
-
-
 });
-
