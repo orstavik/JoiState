@@ -61,8 +61,8 @@ class JoiCompute {
 
   /**
    *
-   * @param functions
-   * @param stackRemainderCount
+   * @param functions               read-only
+   * @param stackRemainderCount     count-down
    * @param pathsCache              immutable
    * @param perFuncOldPathsCache    immutable
    * @param stack
@@ -123,5 +123,20 @@ class JoiCompute {
         functions.join("\n")
       );
     }
+  }
+
+  /**
+   * Computes all the computed values from scratch, regardless.
+   * Does not affect the remembered state of this JoiCompute instance.
+   * @param reducedState the state with the reduced values
+   * @returns {{}} the                                                  * @param computer with the function register to be
+
+   */
+  //todo make a test for this function, to see that it makes something from scratch,
+  //todo and that it does not affect the state of this JoiCompute instance,
+  //todo and test that the values of the computeds stay the same.
+  computeFromScratch(reducedState){
+    const resultStack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, {}, {}, []);
+    return JoiGraph.setInAll(reducedState, resultStack[0].pathsCache);
   }
 }
