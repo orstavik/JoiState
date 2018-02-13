@@ -44,13 +44,10 @@ class JoiStateWithFullHistory extends JoiState {
   }
 
   /**
-   * todo Make history only store the reduced values, not the computed values of the state.
+   * todo Make history only store the reduced values, not the computed values of the state using
+   * todo .computeFromScratch(reducedState)
+   * todo
    * todo The benefit of this approach is to have less data to store.
    * todo The computed values should always be the same anyways, so they can be recalculated as needed.
    */
-  computeFullState(reducedState){
-    let computer = this.computer.clone();
-    // computer.
-  }
-
 }
