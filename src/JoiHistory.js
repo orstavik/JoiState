@@ -42,4 +42,15 @@ class JoiStateWithFullHistory extends JoiState {
     task.taskName = task.reducer.name;
     return task;
   }
+
+  /**
+   * todo Make history only store the reduced values, not the computed values of the state.
+   * todo The benefit of this approach is to have less data to store.
+   * todo The computed values should always be the same anyways, so they can be recalculated as needed.
+   */
+  computeFullState(reducedState){
+    let computer = this.computer.clone();
+    // computer.
+  }
+
 }

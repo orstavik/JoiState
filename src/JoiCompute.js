@@ -18,12 +18,11 @@ class JoiStateStackOverflowError extends Error {
  */
 class JoiCompute {
 
-  constructor(maxStackSize, observe) {
+  constructor(maxStackSize) {
     this.maxStackSize = maxStackSize || 100;
     this.functionsRegister = {};
     this.pathRegister = {};
     this.stack = [{functionsRun: [], pathsCache: {}}];
-    this.observe = observe;
   }
 
   bind(func, pathsAsStrings, returnName) {
@@ -56,7 +55,7 @@ class JoiCompute {
     let perFuncPreviousPathsCache = {};
     for (let funKy of Object.getOwnPropertyNames(this.functionsRegister))
       perFuncPreviousPathsCache[funKy] = this.stack[0].pathsCache;
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, [], this.observe);
+    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, []);
     return JoiGraph.setInAll(newReducedState, this.stack[0].pathsCache);
   }
 
@@ -70,7 +69,7 @@ class JoiCompute {
    * @returns {Object[]} all the pathsCache, the full stack.
    * @private
    */
-  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack, observe) {
+  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack) {
     JoiCompute.checkStackCount(stackRemainderCount, stack);
 
     let functionsRun = [];
@@ -100,7 +99,7 @@ class JoiCompute {
       pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
       const temporaryResult = [{functionsRun, pathsCache}].concat(stack);
-      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, temporaryResult, observe);
+      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, temporaryResult);
     }
     let finalResult = {functionsRun, pathsCache};
     return [finalResult];
