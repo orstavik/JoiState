@@ -223,7 +223,6 @@ class JoiGraph {
     return C;
   }
 
-  //todo start max
   /**
    * Immutable filter that strips out
    * 1) entries of A that are matching exactly entries in B
@@ -266,8 +265,6 @@ class JoiGraph {
       return undefined;
     return C;
   }
-
-  //todo stop max
 
   /**
    * Flattens a normal object tree to an array of {path, value} objects
