@@ -40,12 +40,14 @@ class JoiState {
   }
 
   /**
-   * Que for
-   * @param task
-   * @private
+   * Dispatch a reducer action.
+   * The dispatcher firsts ques all requests to ensure they are executed one by one.
+   * When the que is ready, the given reducer function is called with the given data payload on the state.
+   * @param {Function} reducer a static function such as MyReducers.seducerFunction1
+   * @param {{}} data object passed as second argument to the reducer.
    */
-  _que(task){
-    this.que.push(task);
+  dispatch(reducer, data){
+    this.que.push({event: data, reducer, start: performance.now()});
     if (this.que.length >= 2) //someone else is already running the que, this flow of control resigns
       return;
     while (this.que.length > 0){
@@ -56,7 +58,7 @@ class JoiState {
 
   //todo rename addEventReducer??
   bindReduce(eventName, reducer) {
-    this.reducers[eventName] = event => this._que({event, reducer, start: performance.now()});
+    this.reducers[eventName] = event => this.dispatch(reducer, event);
     window.addEventListener(eventName, this.reducers[eventName]);
   }
 
@@ -74,16 +76,6 @@ class JoiState {
   //todo rename: observe(argsAsStrings, observeFunc) to mirror redux naming
   bindObserve(observeFunc, argsAsStrings) {
     this.observer.bind(observeFunc, argsAsStrings);
-  }
-
-  //todo make tests
-  /**
-   * Trigger reducer directly.
-   * @param {Function} reducer a static function such as MyReducers.seducerFunction1
-   * @param {{}} payload the data object passed to the reducer as second argument.
-   */
-  dispatch(reducer, payload){
-    this._que({event: {detail: payload}, reducer, start: performance.now()});
   }
 
   /**
