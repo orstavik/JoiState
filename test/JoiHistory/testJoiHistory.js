@@ -83,8 +83,7 @@ describe('JoiHistory', function () {
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
     let firstTime = true;
-    const history = new JoiHistory();
-    history.attachState(state);
+    const history = new JoiHistory(state);
     history.bindOnChange(history => {
       if (firstTime) {
         expect(history.length).to.be.equal(1);

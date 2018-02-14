@@ -1,11 +1,8 @@
 class JoiHistory {
 
-  constructor() {
+  constructor(state) {
     this.history = [];
     this.onChangeCB = [];
-  }
-
-  attachState(state){
     state.bindOnComplete(
       (newState, task, startState, reducedState, computer, observer, error) => {
         const snap = JoiHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
