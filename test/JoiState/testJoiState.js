@@ -19,11 +19,13 @@ describe('JoiState basics', function () {
     };
     const state = new JoiState(startState);
     state.bindReduce('state-test-one', reducerOne, true);
-    state.onComplete = newState => {
-      expect(newState).to.deep.equal(testValue);
-      state.destructor();
-      done();
-    };
+    state.bindOnComplete(
+      newState => {
+        expect(newState).to.deep.equal(testValue);
+        state.destructor();
+        done();
+      }
+    );
     window.dispatchEvent(new CustomEvent('state-test-one', {bubbles: true, composed: true, detail: "reduceData"}));
   });
 
@@ -52,11 +54,11 @@ describe('JoiState basics', function () {
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
-    state.onComplete = newState => {
+    state.bindOnComplete (newState => {
       expect(newState).to.deep.equal(testValue);
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-two', {bubbles: true, composed: true, detail: "reduceData2"}));
   });
 
@@ -88,12 +90,12 @@ describe('JoiState basics', function () {
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
-    state.onComplete = newState => {
+    state.bindOnComplete(newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));
   });
 
@@ -137,11 +139,11 @@ describe('JoiState basics', function () {
     };
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.onComplete = function (newState) {
+    state.bindOnComplete (function (newState) {
       expect(newState).to.deep.equal(endState);
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ab"}));
   });
 
@@ -171,11 +173,11 @@ describe('JoiState basics', function () {
     };
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.onComplete = function (newState) {
+    state.bindOnComplete (function (newState) {
       expect(newState).to.deep.equal(endState);
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ba"}));
   });
 
@@ -190,13 +192,13 @@ describe('JoiState basics', function () {
     state.bindReduce('state-test-nan', reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);
     state.bindCompute("_c", sum, ["a", "_b"]);
-    state.onComplete = newState => {
+    state.bindOnComplete (newState => {
       expect(newState.a).to.be.equal(2);
       expect(newState._b).to.be.NaN;
       expect(newState._c).to.be.NaN;
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-nan', {bubbles: true, composed: true, detail: 2}));
   });
 
@@ -238,13 +240,13 @@ describe('JoiState basics', function () {
     testValue._d2 = '{"b":2}9';
     testValue._d3 = '{"b":2}9';
     testValue._d4 = '{"b":2}9';
-    state.onComplete = newState => {
+    state.bindOnComplete (newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.whatever_0).to.be.equal("21");
       expect(window.whatever_1).to.be.equal('{"b":2}9');
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "JohnSmith"}));
   });
 });

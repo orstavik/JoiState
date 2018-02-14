@@ -78,12 +78,14 @@ describe('JoiHistory', function () {
       console.log(prop);
     };
 
-    const state = new JoiStateWithFullHistory({a: "a string"});
+    const state = new JoiState({a: "a string"});
     state.bindReduce('history-test-one', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
     let firstTime = true;
-    state.onHistoryChanged = history => {
+    const history = new JoiHistory();
+    history.attachState(state);
+    history.bindOnChange(history => {
       if (firstTime) {
         expect(history.length).to.be.equal(1);
         let diff = Object.keys(JoiGraph.flatten(JoiGraph.filterDeep(history[0], testValue1)));
@@ -96,7 +98,7 @@ describe('JoiHistory', function () {
         state.destructor();
         done();
       }
-    };
+    });
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
   });

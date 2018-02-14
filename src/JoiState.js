@@ -1,10 +1,11 @@
-//todo rename to JoiStore to echo pattern names
-class JoiState {
+class JoiState {              //todo rename to JoiStore to echo pattern names
 
   constructor(initial) {
     this.reducers = {};
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(1);
+    this.onCompletes = [];
+    this.onErrors = [];
     this.state = JoiGraph.deepFreeze(initial || {});
     this.que = [];
   }
@@ -35,7 +36,8 @@ class JoiState {
     } catch (err) {
       this.onError(error = err);
     } finally {
-      this.onComplete(this.state, task, startState, reducedState, this.computer, this.observer, error);
+      for (let func of this.onCompletes)
+        func(this.state, task, startState, reducedState, this.computer, this.observer, error);
     }
   }
 
@@ -79,10 +81,11 @@ class JoiState {
   }
 
   /**
-   * Hook. Called after every run triggered by a new action.
-   * @param {{}} newState the state after reducer and all computers have finished processing.
+   * Add function to be called after every run triggered by a new action.
+   * @param {Function} func
    */
-  onComplete(newState, task, startState, reducedState, computer, observer, error) {
+  bindOnComplete(func){
+    this.onCompletes.push(func);
   }
 
   /**

@@ -21,7 +21,7 @@ describe('JoiState Que', function () {
     state.bindObserve(observeTwo, ["a"]);
 
     let count = 0;
-    state.onComplete = function (newState) {
+    state.bindOnComplete ( function (newState) {
       if (count === 0)
         expect(newState).to.deep.equal({a: "A"});
       else if (count === 1)
@@ -31,7 +31,7 @@ describe('JoiState Que', function () {
         done();
       }
       count++;
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-observe-event', {detail: "A"}));
   });
 });

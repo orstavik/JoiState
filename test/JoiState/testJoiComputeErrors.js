@@ -28,7 +28,7 @@ describe('JoiState Errors', function () {
       expect("Error: i should fail").to.be.equal(error.toString());
     };
     let firstTime = true;
-    state.onComplete = newState => {
+    state.bindOnComplete (newState => {
       if (firstTime) {
         expect(newState.a).to.be.equal(1);
         firstTime = false;
@@ -37,7 +37,7 @@ describe('JoiState Errors', function () {
         state.destructor();
         done();
       }
-    };
+    });
     window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true, detail: null}));
     window.dispatchEvent(new CustomEvent('state-test-working', {bubbles: true, composed: true, detail: 3}));
   });

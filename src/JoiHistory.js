@@ -1,31 +1,28 @@
-class JoiStateWithFullHistory extends JoiState {
+class JoiHistory {
 
-  constructor(initState) {
-    super(initState);
+  constructor() {
     this.history = [];
-    window.addEventListener("state-history-get", e =>
-      window.dispatchEvent(new CustomEvent("state-history", {detail: this.history}))
+    this.onChangeCB = [];
+  }
+
+  attachState(state){
+    state.bindOnComplete(
+      (newState, task, startState, reducedState, computer, observer, error) => {
+        const snap = JoiHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
+        this.history.push(snap);
+        for (let func of this.onChangeCB)
+          func(this.history);
+      }
     );
-    //todo this i should just query as joiState.history??
   }
 
-  onComplete(newState, task, startState, reducedState, computer, observer, error) {
-    const snap = JoiStateWithFullHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
-    this.history.push(snap);
-    this.onHistoryChanged(this.history);
-  }
-
-  /**
-   * Hook! use this to do something whenever the history changes
-   */
-  onHistoryChanged(history){
-    //todo attach to this point directly instead of communicating through events.
-    window.dispatchEvent(new CustomEvent("state-history-changed", {detail: history}));
+  bindOnChange(cb) {
+    this.onChangeCB.push(cb);
   }
 
   static makeSnap(task, newState, startState, reducedState, computer, observer, error) {
     return {
-      task: JoiStateWithFullHistory._simplifyTask(task),
+      task: JoiHistory._simplifyTask(task),
       newState,
       startState,
       reducedState,

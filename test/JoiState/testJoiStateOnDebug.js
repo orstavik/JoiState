@@ -71,7 +71,7 @@ describe('JoiState.onDebug', function () {
     state.bindReduce('history-test-one', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
-    state.onComplete = (newState, task, startState, reducedState, computer, observer, error) => {
+    state.bindOnComplete ( (newState, task, startState, reducedState, computer, observer, error) => {
       const debugInfo = {
         task: _simplifyTask(task),
         startState,
@@ -85,7 +85,7 @@ describe('JoiState.onDebug', function () {
       expect(diff).to.deep.equal(diffInTest);
       state.destructor();
       done();
-    };
+    });
     window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
   });
 });
