@@ -1,3 +1,5 @@
+import {JoiState, JoiGraph} from "../../src/JoiState.js";
+
 describe('JoiState Que', function () {
 
   it("Event thrown from observers that trigger new reducer actions must be queued.", function (done) {

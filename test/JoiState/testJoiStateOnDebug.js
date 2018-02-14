@@ -1,3 +1,5 @@
+import {JoiState, JoiGraph} from "../../src/JoiState.js";
+
 describe('JoiState.onDebug', function () {
 
   it("test first run", function (done) {

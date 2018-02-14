@@ -1,4 +1,6 @@
-//todo getInAll
+import {JoiGraph} from "../../src/JoiGraph.js";
+// import {JoiState} from "../../src/JoiState.js";
+
 describe('JoiGraph.getIn && JoiGraph.getInAll', function () {
 
   it("JoiGraph.getIn(one, path), paths tests", function () {

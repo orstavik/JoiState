@@ -1,3 +1,5 @@
+import {JoiGraph} from "../../src/JoiGraph.js";
+
 describe('test of JoiGraph.setIn', function () {
 
   const deleteTests = [undefined, Object.create(null, {}), {}];

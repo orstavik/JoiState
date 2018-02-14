@@ -1,3 +1,5 @@
+import {JoiGraph} from "../../src/JoiGraph.js";
+
 describe('JoiGraph.filter', function () {
 
   const A = JoiGraph.make({

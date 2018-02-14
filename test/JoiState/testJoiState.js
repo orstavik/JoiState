@@ -1,3 +1,5 @@
+import {JoiState, JoiGraph} from "../../src/JoiState.js";
+
 describe('JoiState basics', function () {
 
   it("new JoiState", function () {

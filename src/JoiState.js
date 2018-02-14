@@ -1,4 +1,8 @@
-class JoiState {              //todo rename to JoiStore to echo pattern names
+import {JoiCompute} from "./JoiCompute.js";
+import {JoiGraph} from "./JoiGraph.js";
+export {JoiGraph} from "./JoiGraph.js";
+
+export class JoiState {              //todo rename to JoiStore to echo pattern names
 
   constructor(initial) {
     this.reducers = {};

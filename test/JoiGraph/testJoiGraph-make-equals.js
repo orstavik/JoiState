@@ -1,3 +1,5 @@
+import {JoiGraph} from "../../src/JoiGraph.js";
+
 describe('JoiGraph.make .equals .equalsShallow', function () {
   it("JoiGraph.make()", function () {
     const a = JoiGraph.make();

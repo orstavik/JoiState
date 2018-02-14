@@ -1,3 +1,5 @@
+import {JoiGraph} from "../../src/JoiGraph.js";
+
 describe('JoiGraph.mergeDeep', function () {
 
   let one = {

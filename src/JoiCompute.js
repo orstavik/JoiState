@@ -1,3 +1,5 @@
+import {JoiGraph} from "./JoiGraph.js";
+
 class JoiStateStackOverflowError extends Error {
   constructor(message) {
     super(message);
@@ -16,7 +18,7 @@ class JoiStateStackOverflowError extends Error {
  * could be called once or twice during each cycle, depending only on the sequence of adding the compute and observe
  * functions, as it would be trigger after one computed parameter changes, or two computed parameters changes.
  */
-class JoiCompute {
+export class JoiCompute {
 
   constructor(maxStackSize) {
     this.maxStackSize = maxStackSize || 100;

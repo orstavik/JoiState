@@ -1,3 +1,5 @@
+import {JoiGraph} from "../../src/JoiGraph.js";
+
 describe('JoiGraph.flatten .getParentPaths .orderedAssign', function () {
 
   const tree = {a: {x: 1}, b: {y: {"12": "something"}}};

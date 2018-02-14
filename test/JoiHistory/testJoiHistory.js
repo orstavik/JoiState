@@ -1,3 +1,6 @@
+import {JoiState, JoiGraph} from "../../src/JoiState.js";
+import {JoiHistory} from "../../src/JoiHistory.js";
+
 describe('JoiHistory', function () {
 
   it("double run", function (done) {

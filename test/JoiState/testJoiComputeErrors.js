@@ -1,3 +1,5 @@
+import {JoiState, JoiGraph} from "../../src/JoiState.js";
+
 describe('JoiState Errors', function () {
 
   it("JoiState simple error", function (done) {
