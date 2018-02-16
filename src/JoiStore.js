@@ -14,32 +14,6 @@ export class JoiStore {
   }
 
   /**
-   * Main control flow of the JoiStore machine.
-   * 1. Call the single reduce function with the event detail based on the event type captured.
-   * 2. Update all computed values based on all the computed functions bound based on the state changes caused by the reducer.
-   * 3. Check all the observer functions bound based on the state changes done by the reducer and computer functions.
-   * 4. Call the onComplete hook with the newState, and other debug values if needed.
-   * X. If any Errors are thrown during reduction, computation or observation, then call onError.
-   * @param task
-   * @private
-   */
-  _run(task) {
-    let error, reducedState, startState = this.state;
-    try {
-      reducedState = task.reducer(startState, task.data);
-      if (startState !== reducedState) {
-        this.state = this.computer.update(reducedState);
-        this.observer.update(this.state);
-      }
-    } catch (err) {
-      this.onError(error = err);
-    } finally {
-      for (let func of this.onCompletes)
-        func(this.state, task, startState, reducedState, this.computer, this.observer, error);
-    }
-  }
-
-  /**
    * Dispatch a reducer action.
    * The dispatcher firsts ques all requests to ensure they are executed one by one.
    * When the que is ready, the given reducer function is called with the given data payload on the state.
@@ -79,5 +53,31 @@ export class JoiStore {
    */
   onError(error) {
     throw error;
+  }
+
+  /**
+   * Main control flow of the JoiStore machine.
+   * 1. Call the single reduce function with the given data.
+   * 2. Update all computed values based on all the computed functions bound based on the state changes caused by the reducer.
+   * 3. Check all the observer functions bound based on the state changes done by the reducer and computer functions.
+   * 4. Call the onComplete hook with the newState, and other debug values if needed.
+   * X. If any Errors are thrown during reduction, computation or observation, then call onError.
+   * @param task
+   * @private
+   */
+  _run(task) {
+    let error, reducedState, startState = this.state;
+    try {
+      reducedState = task.reducer(startState, task.data);
+      if (startState !== reducedState) {
+        this.state = this.computer.update(reducedState);
+        this.observer.update(this.state);
+      }
+    } catch (err) {
+      this.onError(error = err);
+    } finally {
+      for (let func of this.onCompletes)
+        func(this.state, task, startState, reducedState, this.computer, this.observer, error);
+    }
   }
 }
