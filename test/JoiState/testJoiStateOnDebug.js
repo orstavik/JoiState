@@ -2,10 +2,10 @@ import {JoiState, JoiGraph} from "../../src/JoiState.js";
 
 describe('JoiState.onDebug', function () {
 
-  it("test first run", function (done) {
+  it("test first run", function () {
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e.detail);
+      return JoiGraph.setIn(state, "reducerOne", e);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -13,14 +13,6 @@ describe('JoiState.onDebug', function () {
     const observeOne = function (prop) {
       console.log(prop);
     };
-    const _simplifyTask = function (task) {
-      task.stop = performance.now();
-      task.timeOrigin = performance.timeOrigin;
-      task.data = {type: task.data.type, detail: task.data.detail};
-      task.taskName = task.reducer.name;
-      return task;
-    };
-
     let testValue1 = {
       startState: {a: "a string"},
       reducedState: {a: "a string", reducerOne: "reduceData"},
@@ -35,7 +27,7 @@ describe('JoiState.onDebug', function () {
         _computeOne: "a stringreduceData"
       },
       task: {
-        data: {type: "history-test-one", detail: "reduceData"},
+        data: "reduceData",
         taskName: "reducerOne",
       },
       computerInfo: {
@@ -59,8 +51,6 @@ describe('JoiState.onDebug', function () {
       "task",
       "task.reducer",
       "task.start",
-      "task.stop",
-      "task.timeOrigin",
       "computerInfo",
       "computerInfo._computeOne = computeOne(a, reducerOne)",
       "computerInfo._computeOne = computeOne(a, reducerOne).func",
@@ -70,12 +60,12 @@ describe('JoiState.onDebug', function () {
     ];
 
     const state = new JoiState({a: "a string"});
-    state.bindReduce('history-test-one', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
-    state.bindOnComplete ( (newState, task, startState, reducedState, computer, observer, error) => {
+    state.bindOnComplete((newState, task, startState, reducedState, computer, observer, error) => {
+      task.taskName = task.reducer.name;
       const debugInfo = {
-        task: _simplifyTask(task),
+        task,
         startState,
         reducedState,
         newState,
@@ -85,9 +75,7 @@ describe('JoiState.onDebug', function () {
       };
       let diff = Object.keys(JoiGraph.flatten(JoiGraph.filterDeep(debugInfo, testValue1)));
       expect(diff).to.deep.equal(diffInTest);
-      state.destructor();
-      done();
     });
-    window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
+    state.dispatch(reducerOne, "reduceData");
   });
 });
