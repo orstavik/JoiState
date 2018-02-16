@@ -82,7 +82,6 @@ describe('JoiState basics', function () {
       expect(newState).to.deep.equal({a: "hello"});
     };
     const state = new JoiState({a: "a string"});
-    state.bindReduce('state-test-one', reducerOne, true);
     state.bindObserve(onNewState, [""]);
     state.dispatch(reducerOne, "a string");   //should not trigger observe on root
     state.dispatch(reducerOne, "hello");      //should trigger observe on root

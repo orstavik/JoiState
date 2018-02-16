@@ -2,38 +2,36 @@ import {JoiState, JoiGraph} from "../../src/JoiState.js";
 
 describe('JoiState Que', function () {
 
-  it("Event thrown from observers that trigger new reducer actions must be queued.", function (done) {
+  it("Dispatches from observers that trigger new reducer actions must be queued.", function () {
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e.detail);
+      return JoiGraph.setIn(state, "a", e);
     };
     const reducerTwo = function (state, e) {
-      return JoiGraph.setIn(state, "b", e.detail);
+      return JoiGraph.setIn(state, "b", e);
     };
     const observeOne = function (a) {
-      window.dispatchEvent(new CustomEvent('state-test-observe-event', {detail: "B"}));
+      state.dispatch(reducerOne, "B");
     };
     const observeTwo = function (a) {
-      window.dispatchEvent(new CustomEvent('state-test-observe-event-2', {detail: "C"}));
+      state.dispatch(reducerTwo, "C")
     };
     const state = new JoiState();
-    state.bindReduce('state-test-observe-event', reducerOne, true);
-    state.bindReduce('state-test-observe-event-2', reducerTwo, true);
     state.bindObserve(observeOne, ["a"]);
     state.bindObserve(observeTwo, ["a"]);
 
     let count = 0;
-    state.bindOnComplete ( function (newState) {
+    state.bindOnComplete(function (newState) {
       if (count === 0)
         expect(newState).to.deep.equal({a: "A"});
       else if (count === 1)
         expect(newState).to.deep.equal({a: "B"});
-      else if (count === 2) {
+      else if (count <= 4)
         expect(newState).to.deep.equal({a: "B", b: "C"});
-        done();
-      }
+      else
+        assert(false);
       count++;
     });
-    window.dispatchEvent(new CustomEvent('state-test-observe-event', {detail: "A"}));
+    state.dispatch(reducerOne, "A");
   });
 });

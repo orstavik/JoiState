@@ -13,16 +13,14 @@ describe('JoiState Errors', function () {
     state.dispatch(reducerFail);
   });
 
-  it("JoiState still works after error", function (done) {
+  it("JoiState still works after error", function () {
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e.detail);
+      return JoiGraph.setIn(state, "a", e);
     };
-    const reducerFail = function (state, detail) {
+    const reducerFail = function () {
       throw new Error("i should fail");
     };
     const state = new JoiState({a: 1});
-    state.bindReduce('state-test-fail', reducerFail, true);
-    state.bindReduce('state-test-working', reducerOne, true);
     state.onError = function (error) {
       expect("Error: i should fail").to.be.equal(error.toString());
     };
@@ -33,15 +31,13 @@ describe('JoiState Errors', function () {
         firstTime = false;
       } else {
         expect(newState.a).to.be.equal(3);
-        state.destructor();
-        done();
       }
     });
-    window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true, detail: null}));
-    window.dispatchEvent(new CustomEvent('state-test-working', {bubbles: true, composed: true, detail: 3}));
+    state.dispatch(reducerFail, null);
+    state.dispatch(reducerOne, 3);
   });
 
-  it("make sure an infinite loop happens", function (done) {
+  it("make sure an infinite loop happens", function () {
     const expectedErrorMsg =
 `JoiStateStackOverflowError: Infinite loop or too complex computes in JoiState.
 [_b = sum(a, _c)]
@@ -61,14 +57,11 @@ describe('JoiState Errors', function () {
       return (a || 0) + (b || 0);
     };
     const state = new JoiState({a: 1});
-    state.bindReduce('state-test-infinte', reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);   //infinite loop, when _b is updated,
     state.bindCompute("_c", sum, ["a", "_b"]);   // _c will need to be recalculated, and that triggers update of _b again
     state.onError = function (error) {
       expect(expectedErrorMsg).to.be.equal(error.toString());
-      state.destructor();
-      done();
     };
-    window.dispatchEvent(new CustomEvent('state-test-infinte', {bubbles: true, composed: true, detail: 2}));
+    state.dispatch(reducerOne, 2);
   });
 });
