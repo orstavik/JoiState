@@ -3,7 +3,7 @@ import {JoiHistory} from "../../src/JoiHistory.js";
 
 describe('JoiHistory', function () {
 
-  it("double run", function (done) {
+  it("double run", function () {
     let testValue1 = {
       startState: {a: "a string"},
       reducedState: {a: "a string", reducerOne: "reduceData"},
@@ -18,7 +18,7 @@ describe('JoiHistory', function () {
         _computeOne: "a stringreduceData"
       },
       task: {
-        data: {type: "history-test-one", detail: "reduceData"},
+        data: "reduceData",
         taskName: "reducerOne",
       },
       computerInfo: {
@@ -72,7 +72,7 @@ describe('JoiHistory', function () {
     ];
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e.detail);
+      return JoiGraph.setIn(state, "reducerOne", e);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -82,7 +82,7 @@ describe('JoiHistory', function () {
     };
 
     const state = new JoiState({a: "a string"});
-    state.bindReduce('history-test-one', reducerOne, true);
+    // state.bindReduce('history-test-one', reducerOne, true);
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
     let firstTime = true;
@@ -97,11 +97,13 @@ describe('JoiHistory', function () {
         expect(history.length).to.be.equal(2);
         let diff = Object.keys(JoiGraph.flatten(JoiGraph.filterDeep(history[1], testValue1)));
         expect(diff).to.deep.equal(notInTestSecondTime);
-        state.destructor();
-        done();
+        // state.destructor();
+        // done();
       }
     });
-    window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
-    window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
+    state.dispatch(reducerOne, "reduceData");
+    state.dispatch(reducerOne, "reduceData");
+    // window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
+    // window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
   });
 });
