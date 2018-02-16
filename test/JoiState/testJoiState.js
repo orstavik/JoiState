@@ -113,7 +113,7 @@ describe('JoiState basics', function () {
     state.dispatch(reducerOne, "ab");
   });
 
-  it(".bindCompute() - combining two parts of the state 2", function (done) {
+  it(".bindCompute() - combining two parts of the state 2", function () {
     const startState = {
       users: {
         ab: "AB",
@@ -123,52 +123,40 @@ describe('JoiState basics', function () {
         }
       },
     };
-    const endState = Object.assign({}, startState);
-    endState.user = "ba";
-    endState._userName = {
-      name: "BA",
-      address: "BA home"
-    };
+    const endState = Object.assign({user: "ba", _userName: {name: "BA", address: "BA home"}}, startState);
 
-    const state = new JoiState(startState);
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "user", e.detail);
+      return JoiGraph.setIn(state, "user", e);
     };
     const computeOne = function (users, username) {
       return users[username];
     };
-    state.bindReduce('state-test-two', reducerOne, true);
+
+    const state = new JoiState(startState);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnComplete(function (newState) {
-      expect(newState).to.deep.equal(endState);
-      state.destructor();
-      done();
-    });
-    window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ba"}));
+    state.bindOnComplete(newState => expect(newState).to.deep.equal(endState));
+    state.dispatch(reducerOne, "ba");
   });
 
-  it("NaN !== NaN. Values changing from NaN to NaN is not considered a change in JoiCompute", function (done) {
+  it("NaN !== NaN. Values changing from NaN to NaN is not considered a change in JoiCompute", function () {
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e.detail);
+      return JoiGraph.setIn(state, "a", e);
     };
     const sum = function (a, b) {
       return a + b;  //returns NaN when a or b is not a number
     };
     const state = new JoiState({a: 1});
-    state.bindReduce('state-test-nan', reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);
     state.bindCompute("_c", sum, ["a", "_b"]);
     state.bindOnComplete(newState => {
       expect(newState.a).to.be.equal(2);
       expect(newState._b).to.be.NaN;
       expect(newState._c).to.be.NaN;
-      state.destructor();
-      done();
     });
-    window.dispatchEvent(new CustomEvent('state-test-nan', {bubbles: true, composed: true, detail: 2}));
+    state.dispatch(reducerOne, 2);
   });
 
-  it("confusable computers / observers paths", function (done) {
+  it("confusable computers / observers paths", function () {
     const startState = {
       a: {
         b: 2
@@ -181,7 +169,7 @@ describe('JoiState basics', function () {
     const state = new JoiState(startState);
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "user", e.detail);
+      return JoiGraph.setIn(state, "user", e);
     };
     const computeOne = function (a, b) {
       return JSON.stringify(a) + JSON.stringify(b);
@@ -190,7 +178,6 @@ describe('JoiState basics', function () {
     const observeOne = function (a, b) {
       window["whatever_" + counter++] = JSON.stringify(a) + JSON.stringify(b);
     };
-    state.bindReduce('state-test-three', reducerOne, true);
     state.bindCompute("_d1", computeOne, ["a.b", "c"]);
     state.bindCompute("_d2", computeOne, ["a", "b.c"]);   // same computer function, different paths and return value
     state.bindCompute("_d3", computeOne, ["a", "b.c"]);   // same computer function, different return value only
@@ -210,9 +197,7 @@ describe('JoiState basics', function () {
       expect(newState).to.deep.equal(testValue);
       expect(window.whatever_0).to.be.equal("21");
       expect(window.whatever_1).to.be.equal('{"b":2}9');
-      state.destructor();
-      done();
     });
-    window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "JohnSmith"}));
+    state.dispatch(reducerOne, "JohnSmith");
   });
 });
