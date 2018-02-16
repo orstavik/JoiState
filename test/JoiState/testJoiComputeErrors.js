@@ -2,18 +2,15 @@ import {JoiState, JoiGraph} from "../../src/JoiState.js";
 
 describe('JoiState Errors', function () {
 
-  it("JoiState simple error", function (done) {
-    const reducerFail = function (state) {
+  it("JoiState simple error", function () {
+    const reducerFail = function () {
       throw new Error("i should fail");
     };
     const state = new JoiState();
-    state.bindReduce('state-test-fail', reducerFail, true);
     state.onError = function (error) {
       expect("Error: i should fail").to.be.equal(error.toString());
-      state.destructor();
-      done();
     };
-    window.dispatchEvent(new CustomEvent('state-test-fail', {bubbles: true, composed: true}));
+    state.dispatch(reducerFail);
   });
 
   it("JoiState still works after error", function (done) {
