@@ -5,18 +5,12 @@ export {JoiGraph} from "./JoiGraph.js";
 export class JoiStore {
 
   constructor(initial) {
-    this.reducers = {};
     this.computer = new JoiCompute(100);
     this.observer = new JoiCompute(1);
     this.onCompletes = [];
     this.onErrors = [];
     this.state = JoiGraph.deepFreeze(initial || {});
     this.que = [];
-  }
-
-  destructor() {
-    for (let type in this.reducers)
-      this.detachReducer(type);
   }
 
   /**
@@ -60,18 +54,6 @@ export class JoiStore {
       this._run(this.que[0]);
       this.que.shift();
     }
-  }
-
-  //todo rename addEventReducer??
-  bindReduce(eventName, reducer) {
-    this.reducers[eventName] = event => this.dispatch(reducer, event);
-    window.addEventListener(eventName, this.reducers[eventName]);
-  }
-
-  //todo rename removeEventReducer??
-  detachReducer(eventName) {
-    window.removeEventListener(eventName, this.reducers[eventName]);
-    delete this.reducers[eventName];
   }
 
   compute(argsAsStrings, returnProp, computeFunc) {
