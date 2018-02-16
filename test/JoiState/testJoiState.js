@@ -10,72 +10,48 @@ describe('JoiState basics', function () {
     expect(state.state).to.deep.equal({a: "a string"});
   });
 
-  it(".bindReduce", function (done) {
+  it(".dispatch -> .bindObserve", function () {
 
-    const testValue = {a: "a string", reducerOne: "reduceData"};
-    const startState = {
-      a: "a string"
+    const reducerOne = function (state, d) {
+      return JoiGraph.setIn(state, "reducerOne", d);
     };
-    const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e.detail);
-    };
-    const state = new JoiState(startState);
-    state.bindReduce('state-test-one', reducerOne, true);
-    state.bindOnComplete(
-      newState => {
-        expect(newState).to.deep.equal(testValue);
-        state.destructor();
-        done();
-      }
-    );
-    window.dispatchEvent(new CustomEvent('state-test-one', {bubbles: true, composed: true, detail: "reduceData"}));
+    const state = new JoiState({a: "a string"});
+    state.bindObserve(newState => expect(newState).to.deep.equal({a: "a string", reducerOne: "reduceData"}), [""]);
+    state.dispatch(reducerOne, "reduceData");
   });
 
-  it(".bindCompute x2", function (done) {
+  it(".bindCompute x2", function () {
     let testValue = {
       a: "a string",
       reducerOne: "reduceData2",
       _computeOne: "a stringreduceData2",
       _computeTwo: "a stringreduceData2|a string"
     };
-    const startState = {
-      a: "a string"
-    };
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e.detail);
+      return JoiGraph.setIn(state, "reducerOne", e);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
     };
-
     const computeTwo = function (_computeOne, a) {
       return _computeOne + "|" + a;
     };
-
-    const state = new JoiState(startState);
-    state.bindReduce('state-test-two', reducerOne, true);
+    const state = new JoiState({a: "a string"});
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
-    state.bindOnComplete (newState => {
-      expect(newState).to.deep.equal(testValue);
-      state.destructor();
-      done();
-    });
-    window.dispatchEvent(new CustomEvent('state-test-two', {bubbles: true, composed: true, detail: "reduceData2"}));
+    state.bindOnComplete(newState => expect(newState).to.deep.equal(testValue));
+    state.dispatch(reducerOne, "reduceData2");
   });
 
-  it(".bindObserve", function (done) {
+  it(".bindObserve", function () {
     let testValue = {
       a: "a string",
       reducerOne: "reduceData",
       _computeOne: "a stringreduceData",
       _computeTwo: "a stringreduceData|a string"
     };
-    const startState = {
-      a: "a string"
-    };
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e.detail);
+      return JoiGraph.setIn(state, "reducerOne", e);
     };
     const computeOne = function (a, testOne) {
       return a + testOne;
@@ -87,38 +63,32 @@ describe('JoiState basics', function () {
       window.computeTwoTestValue = prop;
     };
 
-    const state = new JoiState(startState);
-    state.bindReduce('state-test-three', reducerOne, true);
+    const state = new JoiState({a: "a string"});
     state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
     state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
     state.bindObserve(observeOne, ["_computeTwo"]);
     state.bindOnComplete(newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
-      state.destructor();
-      done();
     });
-    window.dispatchEvent(new CustomEvent('state-test-three', {bubbles: true, composed: true, detail: "reduceData"}));
+    state.dispatch(reducerOne, "reduceData");
   });
 
-  it(".bindObserve(func, ['']) - listen to changes on the entire state object", function (done) {
+  it(".bindObserve(func, ['']) - listen to changes on the entire state object", function () {
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e.detail);
+      return JoiGraph.setIn(state, "a", e);
     };
     const onNewState = function (newState) {
       expect(newState).to.deep.equal({a: "hello"});
-      state.destructor();
-      done();
     };
-
     const state = new JoiState({a: "a string"});
     state.bindReduce('state-test-one', reducerOne, true);
     state.bindObserve(onNewState, [""]);
-    window.dispatchEvent(new CustomEvent('state-test-one', {detail: "a string"})); //should not trigger observe on root
-    window.dispatchEvent(new CustomEvent('state-test-one', {detail: "hello"}));    //should trigger observe on root
+    state.dispatch(reducerOne, "a string");   //should not trigger observe on root
+    state.dispatch(reducerOne, "hello");      //should trigger observe on root
   });
 
-  it(".bindCompute() - combining two parts of the state 1", function (done) {
+  it(".bindCompute() - combining two parts of the state 1", function () {
     const startState = {
       users: {
         ab: "AB",
@@ -128,25 +98,19 @@ describe('JoiState basics', function () {
         }
       },
     };
-    const endState = Object.assign({}, startState);
-    endState.user = "ab";
-    endState._userName = "AB";
+    const endState = Object.assign({user: "ab", _userName: "AB"}, startState);
 
-    const state = new JoiState(startState);
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "user", e.detail);
+      return JoiGraph.setIn(state, "user", e);
     };
     const computeOne = function (users, username) {
       return users[username];
     };
-    state.bindReduce('state-test-two', reducerOne, true);
+
+    const state = new JoiState(startState);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnComplete (function (newState) {
-      expect(newState).to.deep.equal(endState);
-      state.destructor();
-      done();
-    });
-    window.dispatchEvent(new CustomEvent('state-test-two', {composed: true, bubbles: true, detail: "ab"}));
+    state.bindOnComplete(newState => expect(newState).to.deep.equal(endState));
+    state.dispatch(reducerOne, "ab");
   });
 
   it(".bindCompute() - combining two parts of the state 2", function (done) {
@@ -175,7 +139,7 @@ describe('JoiState basics', function () {
     };
     state.bindReduce('state-test-two', reducerOne, true);
     state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnComplete (function (newState) {
+    state.bindOnComplete(function (newState) {
       expect(newState).to.deep.equal(endState);
       state.destructor();
       done();
@@ -194,7 +158,7 @@ describe('JoiState basics', function () {
     state.bindReduce('state-test-nan', reducerOne, true);
     state.bindCompute("_b", sum, ["a", "_c"]);
     state.bindCompute("_c", sum, ["a", "_b"]);
-    state.bindOnComplete (newState => {
+    state.bindOnComplete(newState => {
       expect(newState.a).to.be.equal(2);
       expect(newState._b).to.be.NaN;
       expect(newState._c).to.be.NaN;
@@ -242,7 +206,7 @@ describe('JoiState basics', function () {
     testValue._d2 = '{"b":2}9';
     testValue._d3 = '{"b":2}9';
     testValue._d4 = '{"b":2}9';
-    state.bindOnComplete (newState => {
+    state.bindOnComplete(newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.whatever_0).to.be.equal("21");
       expect(window.whatever_1).to.be.equal('{"b":2}9');
