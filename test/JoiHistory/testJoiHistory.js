@@ -18,7 +18,7 @@ describe('JoiHistory', function () {
         _computeOne: "a stringreduceData"
       },
       task: {
-        event: {type: "history-test-one", detail: "reduceData"},
+        data: {type: "history-test-one", detail: "reduceData"},
         taskName: "reducerOne",
       },
       computerInfo: {

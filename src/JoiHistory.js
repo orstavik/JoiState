@@ -32,7 +32,7 @@ export class JoiHistory {
   static _simplifyTask(task) {
     task.stop = performance.now();
     task.timeOrigin = performance.timeOrigin;
-    task.event = {type: task.event.type, detail: task.event.detail};
+    task.data = {type: task.data.type, detail: task.data.detail};
     task.taskName = task.reducer.name;
     return task;
   }

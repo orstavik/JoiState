@@ -16,7 +16,7 @@ describe('JoiState.onDebug', function () {
     const _simplifyTask = function (task) {
       task.stop = performance.now();
       task.timeOrigin = performance.timeOrigin;
-      task.event = {type: task.event.type, detail: task.event.detail};
+      task.data = {type: task.data.type, detail: task.data.detail};
       task.taskName = task.reducer.name;
       return task;
     };
@@ -35,7 +35,7 @@ describe('JoiState.onDebug', function () {
         _computeOne: "a stringreduceData"
       },
       task: {
-        event: {type: "history-test-one", detail: "reduceData"},
+        data: {type: "history-test-one", detail: "reduceData"},
         taskName: "reducerOne",
       },
       computerInfo: {

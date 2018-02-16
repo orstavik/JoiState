@@ -32,7 +32,7 @@ export class JoiState {              //todo rename to JoiStore to echo pattern n
   _run(task) {
     let error, reducedState, startState = this.state;
     try {
-      reducedState = task.reducer(startState, task.event);
+      reducedState = task.reducer(startState, task.data);
       if (startState !== reducedState) {
         this.state = this.computer.update(reducedState);
         this.observer.update(this.state);
@@ -53,7 +53,7 @@ export class JoiState {              //todo rename to JoiStore to echo pattern n
    * @param {{}} data object passed as second argument to the reducer.
    */
   dispatch(reducer, data){
-    this.que.push({event: data, reducer, start: performance.now()});
+    this.que.push({reducer, data, start: performance.now()});
     if (this.que.length >= 2) //someone else is already running the que, this flow of control resigns
       return;
     while (this.que.length > 0){
