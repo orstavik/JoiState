@@ -12,7 +12,7 @@ class JoiStateStackOverflowError extends Error {
  * Both compute and observe functions should only run when the values of the argument paths that they
  * are bound to changes.
  *
- * The state manager, such as JoiState, should use a separate JoiCompute for observers and computers.
+ * The state manager, such as JoiStore, should use a separate JoiCompute for observers and computers.
  * By keeping the observers in a separate container, the state manager can assure that the observers are only run once,
  * after all the computed properties have updated. If not, an observer that listens for two or more computed properties
  * could be called once or twice during each cycle, depending only on the sequence of adding the compute and observe
@@ -121,7 +121,7 @@ export class JoiCompute {
     if (stackRemainderCount < stack.length) {
       let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ") + "]").slice(0,10);
       throw new JoiStateStackOverflowError(
-        "Infinite loop or too complex computes in JoiState.\n" +
+        "Infinite loop or too complex computes in JoiStore.\n" +
         functions.join("\n")
       );
     }

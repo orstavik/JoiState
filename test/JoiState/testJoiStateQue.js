@@ -1,6 +1,6 @@
-import {JoiState, JoiGraph} from "../../src/JoiState.js";
+import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
 
-describe('JoiState Que', function () {
+describe('JoiStore Que', function () {
 
   it("Dispatches from observers that trigger new reducer actions must be queued.", function () {
 
@@ -16,12 +16,12 @@ describe('JoiState Que', function () {
     const observeTwo = function (a) {
       state.dispatch(reducerTwo, "C")
     };
-    const state = new JoiState();
-    state.bindObserve(observeOne, ["a"]);
-    state.bindObserve(observeTwo, ["a"]);
+    const state = new JoiStore();
+    state.observe(["a"], observeOne);
+    state.observe(["a"], observeTwo);
 
     let count = 0;
-    state.bindOnComplete(function (newState) {
+    state.onComplete(function (newState) {
       if (count === 0)
         expect(newState).to.deep.equal({a: "A"});
       else if (count === 1)

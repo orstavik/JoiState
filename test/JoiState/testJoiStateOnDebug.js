@@ -1,6 +1,6 @@
-import {JoiState, JoiGraph} from "../../src/JoiState.js";
+import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
 
-describe('JoiState.onDebug', function () {
+describe('JoiStore.onDebug', function () {
 
   it("test first run", function () {
 
@@ -59,10 +59,10 @@ describe('JoiState.onDebug', function () {
       "observerInfo.undefined = observeOne(_computeTwo).func"
     ];
 
-    const state = new JoiState({a: "a string"});
-    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
-    state.bindObserve(observeOne, ["_computeTwo"]);
-    state.bindOnComplete((newState, task, startState, reducedState, computer, observer, error) => {
+    const state = new JoiStore({a: "a string"});
+    state.compute(["a", "reducerOne"], "_computeOne", computeOne);
+    state.observe(["_computeTwo"], observeOne);
+    state.onComplete((newState, task, startState, reducedState, computer, observer, error) => {
       task.taskName = task.reducer.name;
       const debugInfo = {
         task,

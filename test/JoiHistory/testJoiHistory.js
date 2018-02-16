@@ -1,4 +1,4 @@
-import {JoiState, JoiGraph} from "../../src/JoiState.js";
+import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
 import {JoiHistory} from "../../src/JoiHistory.js";
 
 describe('JoiHistory', function () {
@@ -81,10 +81,10 @@ describe('JoiHistory', function () {
       console.log(prop);
     };
 
-    const state = new JoiState({a: "a string"});
+    const state = new JoiStore({a: "a string"});
     // state.bindReduce('history-test-one', reducerOne, true);
-    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
-    state.bindObserve(observeOne, ["_computeTwo"]);
+    state.compute(["a", "reducerOne"], "_computeOne", computeOne);
+    state.observe(["_computeTwo"], observeOne);
     let firstTime = true;
     const history = new JoiHistory(state);
     history.bindOnChange(history => {

@@ -1,5 +1,5 @@
 import {JoiGraph} from "../../src/JoiGraph.js";
-// import {JoiState} from "../../src/JoiState.js";
+// import {JoiStore} from "../../src/JoiStore.js";
 
 describe('JoiGraph.getIn && JoiGraph.getInAll', function () {
 

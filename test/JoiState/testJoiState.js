@@ -1,12 +1,12 @@
-import {JoiState, JoiGraph} from "../../src/JoiState.js";
+import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
 
-describe('JoiState basics', function () {
+describe('JoiStore basics', function () {
 
-  it("new JoiState", function () {
+  it("new JoiStore", function () {
     const startState = {
       a: "a string"
     };
-    const state = new JoiState(startState);
+    const state = new JoiStore(startState);
     expect(state.state).to.deep.equal({a: "a string"});
   });
 
@@ -15,8 +15,8 @@ describe('JoiState basics', function () {
     const reducerOne = function (state, d) {
       return JoiGraph.setIn(state, "reducerOne", d);
     };
-    const state = new JoiState({a: "a string"});
-    state.bindObserve(newState => expect(newState).to.deep.equal({a: "a string", reducerOne: "reduceData"}), [""]);
+    const state = new JoiStore({a: "a string"});
+    state.observe([""], newState => expect(newState).to.deep.equal({a: "a string", reducerOne: "reduceData"}));
     state.dispatch(reducerOne, "reduceData");
   });
 
@@ -36,10 +36,10 @@ describe('JoiState basics', function () {
     const computeTwo = function (_computeOne, a) {
       return _computeOne + "|" + a;
     };
-    const state = new JoiState({a: "a string"});
-    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
-    state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
-    state.bindOnComplete(newState => expect(newState).to.deep.equal(testValue));
+    const state = new JoiStore({a: "a string"});
+    state.compute(["a", "reducerOne"], "_computeOne", computeOne);
+    state.compute(["_computeOne", "a"], "_computeTwo", computeTwo);
+    state.onComplete(newState => expect(newState).to.deep.equal(testValue));
     state.dispatch(reducerOne, "reduceData2");
   });
 
@@ -63,11 +63,11 @@ describe('JoiState basics', function () {
       window.computeTwoTestValue = prop;
     };
 
-    const state = new JoiState({a: "a string"});
-    state.bindCompute("_computeOne", computeOne, ["a", "reducerOne"]);
-    state.bindCompute("_computeTwo", computeTwo, ["_computeOne", "a"]);
-    state.bindObserve(observeOne, ["_computeTwo"]);
-    state.bindOnComplete(newState => {
+    const state = new JoiStore({a: "a string"});
+    state.compute(["a", "reducerOne"], "_computeOne", computeOne);
+    state.compute(["_computeOne", "a"], "_computeTwo", computeTwo);
+    state.observe(["_computeTwo"], observeOne);
+    state.onComplete(newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.computeTwoTestValue).to.be.equal("a stringreduceData|a string");
     });
@@ -81,8 +81,8 @@ describe('JoiState basics', function () {
     const onNewState = function (newState) {
       expect(newState).to.deep.equal({a: "hello"});
     };
-    const state = new JoiState({a: "a string"});
-    state.bindObserve(onNewState, [""]);
+    const state = new JoiStore({a: "a string"});
+    state.observe([""], onNewState);
     state.dispatch(reducerOne, "a string");   //should not trigger observe on root
     state.dispatch(reducerOne, "hello");      //should trigger observe on root
   });
@@ -106,9 +106,9 @@ describe('JoiState basics', function () {
       return users[username];
     };
 
-    const state = new JoiState(startState);
-    state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnComplete(newState => expect(newState).to.deep.equal(endState));
+    const state = new JoiStore(startState);
+    state.compute(["users", "user"], "_userName", computeOne);
+    state.onComplete(newState => expect(newState).to.deep.equal(endState));
     state.dispatch(reducerOne, "ab");
   });
 
@@ -131,9 +131,9 @@ describe('JoiState basics', function () {
       return users[username];
     };
 
-    const state = new JoiState(startState);
-    state.bindCompute("_userName", computeOne, ["users", "user"]);
-    state.bindOnComplete(newState => expect(newState).to.deep.equal(endState));
+    const state = new JoiStore(startState);
+    state.compute(["users", "user"], "_userName", computeOne);
+    state.onComplete(newState => expect(newState).to.deep.equal(endState));
     state.dispatch(reducerOne, "ba");
   });
 
@@ -144,10 +144,10 @@ describe('JoiState basics', function () {
     const sum = function (a, b) {
       return a + b;  //returns NaN when a or b is not a number
     };
-    const state = new JoiState({a: 1});
-    state.bindCompute("_b", sum, ["a", "_c"]);
-    state.bindCompute("_c", sum, ["a", "_b"]);
-    state.bindOnComplete(newState => {
+    const state = new JoiStore({a: 1});
+    state.compute(["a", "_c"], "_b", sum);
+    state.compute(["a", "_b"], "_c", sum);
+    state.onComplete(newState => {
       expect(newState.a).to.be.equal(2);
       expect(newState._b).to.be.NaN;
       expect(newState._c).to.be.NaN;
@@ -165,7 +165,7 @@ describe('JoiState basics', function () {
       },
       c: 1
     };
-    const state = new JoiState(startState);
+    const state = new JoiStore(startState);
 
     const reducerOne = function (state, e) {
       return JoiGraph.setIn(state, "user", e);
@@ -177,14 +177,14 @@ describe('JoiState basics', function () {
     const observeOne = function (a, b) {
       window["whatever_" + counter++] = JSON.stringify(a) + JSON.stringify(b);
     };
-    state.bindCompute("_d1", computeOne, ["a.b", "c"]);
-    state.bindCompute("_d2", computeOne, ["a", "b.c"]);   // same computer function, different paths and return value
-    state.bindCompute("_d3", computeOne, ["a", "b.c"]);   // same computer function, different return value only
-    state.bindCompute("_d4", computeOne, ["a.b", "c"]);
-    state.bindCompute("_d4", computeOne, ["a", "b.c"]);   // two computer functions writing to the same path, only the last should be active.
-    state.bindObserve(observeOne, ["a.b", "c"]);
-    state.bindObserve(observeOne, ["a", "b.c"]);          // same observer function, different paths
-    state.bindObserve(computeOne, ["a", "b.c"]);          // should not throw any Errors
+    state.compute(["a.b", "c"], "_d1", computeOne);
+    state.compute(["a", "b.c"], "_d2", computeOne);   // same computer function, different paths and return value
+    state.compute(["a", "b.c"], "_d3", computeOne);   // same computer function, different return value only
+    state.compute(["a.b", "c"], "_d4", computeOne);
+    state.compute(["a", "b.c"], "_d4", computeOne);   // two computer functions writing to the same path, only the last should be active.
+    state.observe(["a.b", "c"], observeOne);
+    state.observe(["a", "b.c"], observeOne);          // same observer function, different paths
+    state.observe(["a", "b.c"], computeOne);          // should not throw any Errors
 
     const testValue = Object.assign({}, startState);
     testValue.user = "JohnSmith";
@@ -192,7 +192,7 @@ describe('JoiState basics', function () {
     testValue._d2 = '{"b":2}9';
     testValue._d3 = '{"b":2}9';
     testValue._d4 = '{"b":2}9';
-    state.bindOnComplete(newState => {
+    state.onComplete(newState => {
       expect(newState).to.deep.equal(testValue);
       expect(window.whatever_0).to.be.equal("21");
       expect(window.whatever_1).to.be.equal('{"b":2}9');

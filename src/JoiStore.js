@@ -2,7 +2,7 @@ import {JoiCompute} from "./JoiCompute.js";
 import {JoiGraph} from "./JoiGraph.js";
 export {JoiGraph} from "./JoiGraph.js";
 
-export class JoiState {              //todo rename to JoiStore to echo pattern names
+export class JoiStore {
 
   constructor(initial) {
     this.reducers = {};
@@ -20,7 +20,7 @@ export class JoiState {              //todo rename to JoiStore to echo pattern n
   }
 
   /**
-   * Main control flow of the JoiState machine.
+   * Main control flow of the JoiStore machine.
    * 1. Call the single reduce function with the event detail based on the event type captured.
    * 2. Update all computed values based on all the computed functions bound based on the state changes caused by the reducer.
    * 3. Check all the observer functions bound based on the state changes done by the reducer and computer functions.
@@ -74,13 +74,11 @@ export class JoiState {              //todo rename to JoiStore to echo pattern n
     delete this.reducers[eventName];
   }
 
-  //todo rename: compute(argsAsStrings, computeFunc, returnProp) to mirror redux naming
-  bindCompute(returnProp, computeFunc, argsAsStrings) {
+  compute(argsAsStrings, returnProp, computeFunc) {
     this.computer.bind(computeFunc, argsAsStrings, returnProp);
   }
 
-  //todo rename: observe(argsAsStrings, observeFunc) to mirror redux naming
-  bindObserve(observeFunc, argsAsStrings) {
+  observe(argsAsStrings, observeFunc) {
     this.observer.bind(observeFunc, argsAsStrings);
   }
 
@@ -88,7 +86,7 @@ export class JoiState {              //todo rename to JoiStore to echo pattern n
    * Add function to be called after every run triggered by a new action.
    * @param {Function} func
    */
-  bindOnComplete(func){
+  onComplete(func){
     this.onCompletes.push(func);
   }
 

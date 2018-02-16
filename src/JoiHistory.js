@@ -3,14 +3,12 @@ export class JoiHistory {
   constructor(state) {
     this.history = [];
     this.onChangeCB = [];
-    state.bindOnComplete(
-      (newState, task, startState, reducedState, computer, observer, error) => {
-        const snap = JoiHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
-        this.history.push(snap);
-        for (let func of this.onChangeCB)
-          func(this.history);
-      }
-    );
+    state.onComplete((newState, task, startState, reducedState, computer, observer, error) => {
+      const snap = JoiHistory.makeSnap(task, newState, startState, reducedState, computer, observer, error);
+      this.history.push(snap);
+      for (let func of this.onChangeCB)
+        func(this.history);
+    });
   }
 
   bindOnChange(cb) {
