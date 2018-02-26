@@ -14,8 +14,15 @@ describe('JoiStore.onDebug', function () {
       console.log(prop);
     };
     let testValue1 = {
-      startState: {a: "a string"},
-      reducedState: {a: "a string", reducerOne: "reduceData"},
+      startState: {
+        a: "a string",
+        _computeOne: "a stringundefined"
+      },
+      reducedState: {
+        a: "a string",
+        reducerOne: "reduceData",
+        _computeOne: "a stringundefined"
+      },
       computedState: {
         a: "a string",
         reducerOne: "reduceData",

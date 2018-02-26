@@ -30,10 +30,25 @@ export class JoiStore {
     }
   }
 
+  /**
+   * Add a function that will compute and return a property every time the given argsAsStrings from the state changes.
+   * Every time a compute is added, the state will update all the compute properties
+   * (ie. the compute functions will run before the first dispatch call).
+   *
+   * @param argsAsStrings
+   * @param returnProp
+   * @param computeFunc
+   */
   compute(argsAsStrings, returnProp, computeFunc) {
     this.computer.bind(computeFunc, argsAsStrings, returnProp);
+    this.state = this.computer.computeFromScratch(this.state);
   }
 
+  /**
+   * The observers are only run after the first dispatch call
+   * @param argsAsStrings
+   * @param observeFunc
+   */
   observe(argsAsStrings, observeFunc) {
     this.observer.bind(observeFunc, argsAsStrings);
   }

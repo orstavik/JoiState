@@ -22,9 +22,9 @@ export class JoiCompute {
 
   constructor(maxStackSize) {
     this.maxStackSize = maxStackSize || 100;
-    this.functionsRegister = {};
-    this.pathRegister = {};
-    this.stack = [{functionsRun: [], pathsCache: {}}];
+    this.functionsRegister = {};               //immutable during .update
+    this.pathRegister = {};                    //immutable during .update
+    this.stack = [{functionsRun: [], pathsCache: {}}];    //mutable during .update
   }
 
   bind(func, pathsAsStrings, returnName) {
@@ -45,20 +45,39 @@ export class JoiCompute {
   }
 
   /**
-   * this.stack[0] is the values of the last run. By checking the values from the last update,
+   * this.stack[0].pathsCache is the values of the last run. By checking the values from the last update,
    * compute and observe functions with no paramaters changed since last reducer call are not run.
-   * This makes more sense for the developers writing reduce, compute and observe functions.
+   * This makes more sense for the developers writing reduce, compute and observe functions, than rerunning all
+   * the compute functions from scratch after each reducer.
    *
    * @param newReducedState
    * @returns {Object} newly computed state
    */
   update(newReducedState) {
+    this.stack = this._compute(newReducedState, this.stack[0].pathsCache);
+    return JoiGraph.setInAll(newReducedState, this.stack[0].pathsCache);
+  }
+
+  //todo make a test for this function, to see that it makes something from scratch,
+  //todo verify that it does not affect the state of this JoiCompute instance,
+  //todo test that the return props from the computes stay the same.
+  /**
+   * Runs all compute functions from scratch on the input state.
+   * Does not affect the remembered state of this JoiCompute instance.
+   * @param inputState
+   * @returns {{}} inputState with the result from any compute functions added
+   */
+  computeFromScratch(inputState) {
+    const resultStack = this._compute(inputState, {});
+    return JoiGraph.setInAll(inputState, resultStack[0].pathsCache);
+  }
+
+  _compute(newReducedState, previousRun) {
     let pathsCache = JoiGraph.getInAll(newReducedState, this.pathRegister);
     let perFuncPreviousPathsCache = {};
     for (let funKy of Object.getOwnPropertyNames(this.functionsRegister))
-      perFuncPreviousPathsCache[funKy] = this.stack[0].pathsCache;
-    this.stack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, []);
-    return JoiGraph.setInAll(newReducedState, this.stack[0].pathsCache);
+      perFuncPreviousPathsCache[funKy] = previousRun;
+    return JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, []);
   }
 
   /**
@@ -125,20 +144,5 @@ export class JoiCompute {
         functions.join("\n")
       );
     }
-  }
-
-  /**
-   * Computes all the computed values from scratch, regardless.
-   * Does not affect the remembered state of this JoiCompute instance.
-   * @param reducedState the state with the reduced values
-   * @returns {{}} the                                                  * @param computer with the function register to be
-
-   */
-  //todo make a test for this function, to see that it makes something from scratch,
-  //todo and that it does not affect the state of this JoiCompute instance,
-  //todo and test that the values of the computeds stay the same.
-  computeFromScratch(reducedState){
-    const resultStack = JoiCompute.__compute(this.functionsRegister, this.maxStackSize, {}, {}, []);
-    return JoiGraph.setInAll(reducedState, resultStack[0].pathsCache);
   }
 }

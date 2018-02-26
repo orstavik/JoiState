@@ -40,7 +40,6 @@ describe('JoiStore Errors', function () {
   it("make sure an infinite loop happens", function () {
     const expectedErrorMsg =
 `JoiStateStackOverflowError: Infinite loop or too complex computes in JoiStore.
-[_b = sum(a, _c)]
 [_c = sum(a, _b)]
 [_b = sum(a, _c)]
 [_c = sum(a, _b)]
@@ -49,7 +48,8 @@ describe('JoiStore Errors', function () {
 [_b = sum(a, _c)]
 [_c = sum(a, _b)]
 [_b = sum(a, _c)]
-[_c = sum(a, _b)]`;
+[_c = sum(a, _b)]
+[_b = sum(a, _c)]`;
     const reducerOne = function (state, detail) {
       return JoiGraph.setIn(state, "a", detail);
     };
@@ -58,10 +58,10 @@ describe('JoiStore Errors', function () {
     };
     const state = new JoiStore({a: 1});
     state.compute(["a", "_c"], "_b", sum);   //infinite loop, when _b is updated,
-    state.compute(["a", "_b"], "_c", sum);   // _c will need to be recalculated, and that triggers update of _b again
-    state.onError = function (error) {
+    try{
+      state.compute(["a", "_b"], "_c", sum);   // _c will need to be recalculated, and that triggers update of _b again
+    } catch (error) {
       expect(expectedErrorMsg).to.be.equal(error.toString());
-    };
-    state.dispatch(reducerOne, 2);
+    }
   });
 });

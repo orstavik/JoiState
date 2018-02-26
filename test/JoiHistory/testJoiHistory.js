@@ -5,8 +5,15 @@ describe('JoiHistory', function () {
 
   it("double run", function () {
     let testValue1 = {
-      startState: {a: "a string"},
-      reducedState: {a: "a string", reducerOne: "reduceData"},
+      startState: {
+        a: "a string",
+        _computeOne: "a stringundefined"
+      },
+      reducedState: {
+        a: "a string",
+        reducerOne: "reduceData",
+        _computeOne: "a stringundefined"
+      },
       computedState: {
         a: "a string",
         reducerOne: "reduceData",
@@ -59,8 +66,8 @@ describe('JoiHistory', function () {
       "task.stop",
       "task.timeOrigin",
       "startState",
-      "startState.reducerOne",
       "startState._computeOne",
+      "startState.reducerOne",
       "reducedState",
       "reducedState._computeOne",
       "computerInfo",
@@ -82,7 +89,6 @@ describe('JoiHistory', function () {
     };
 
     const state = new JoiStore({a: "a string"});
-    // state.bindReduce('history-test-one', reducerOne, true);
     state.compute(["a", "reducerOne"], "_computeOne", computeOne);
     state.observe(["_computeTwo"], observeOne);
     let firstTime = true;
@@ -97,13 +103,9 @@ describe('JoiHistory', function () {
         expect(history.length).to.be.equal(2);
         let diff = Object.keys(JoiGraph.flatten(JoiGraph.filterDeep(history[1], testValue1)));
         expect(diff).to.deep.equal(notInTestSecondTime);
-        // state.destructor();
-        // done();
       }
     });
     state.dispatch(reducerOne, "reduceData");
     state.dispatch(reducerOne, "reduceData");
-    // window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
-    // window.dispatchEvent(new CustomEvent('history-test-one', {detail: "reduceData"}));
   });
 });
