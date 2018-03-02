@@ -29,7 +29,7 @@ export class JoiHistory {
 
   static _simplifyTask(task) {
     task.stop = performance.now();
-    task.timeOrigin = performance.timeOrigin;
+    task.timestamp = new Date().getTime();
     task.taskName = task.reducer.name;
     return task;
   }
