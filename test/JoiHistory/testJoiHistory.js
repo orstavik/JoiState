@@ -79,7 +79,7 @@ describe('JoiHistory', function () {
     ];
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "reducerOne", e);
+      state.reducerOne = e;
     };
     const computeOne = function (a, testOne) {
       return a + testOne;

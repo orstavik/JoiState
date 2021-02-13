@@ -1,14 +1,14 @@
-import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
+import {JoiStore} from "../../src/JoiStore.js";
 
 describe('JoiStore Que', function () {
 
   it("Dispatches from observers that trigger new reducer actions must be queued.", function () {
 
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e);
+      state.a = e;
     };
     const reducerTwo = function (state, e) {
-      return JoiGraph.setIn(state, "b", e);
+      state.b = e;
     };
     const observeOne = function (a) {
       state.dispatch(reducerOne, "B");

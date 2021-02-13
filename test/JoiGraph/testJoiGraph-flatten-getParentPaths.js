@@ -78,6 +78,7 @@ describe('JoiGraph.flatten .getParentPaths .orderedAssign', function () {
     const A = {a: 1, b: 2, c: 3};
     const B = {a: 11, d: 12, e: 13};
     const C = JoiGraph.orderedAssign(A, B);
+    // const C = Object.assign({}, A, B); //todo convert to this function, don't need this do we??
     expect(C).to.deep.equal({a: 11, d: 12, e: 13, b: 2, c: 3});
     expect(["a", "d", "e", "b", "c"]).to.deep.equal(Object.keys(C));
   });

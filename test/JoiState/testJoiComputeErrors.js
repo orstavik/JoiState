@@ -1,4 +1,4 @@
-import {JoiStore, JoiGraph} from "../../src/JoiStore.js";
+import {JoiStore} from "../../src/JoiStore.js";
 
 describe('JoiStore Errors', function () {
 
@@ -15,7 +15,7 @@ describe('JoiStore Errors', function () {
 
   it("JoiStore still works after error", function () {
     const reducerOne = function (state, e) {
-      return JoiGraph.setIn(state, "a", e);
+      state.a = e;
     };
     const reducerFail = function () {
       throw new Error("i should fail");
@@ -51,7 +51,7 @@ describe('JoiStore Errors', function () {
 [_c = sum(a, _b)]
 [_b = sum(a, _c)]`;
     const reducerOne = function (state, detail) {
-      return JoiGraph.setIn(state, "a", detail);
+      state.a = detail;
     };
     const sum = function (a, b) {
       return (a || 0) + (b || 0);

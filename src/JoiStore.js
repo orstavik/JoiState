@@ -1,5 +1,6 @@
 import {JoiCompute} from "./JoiCompute.js";
 import {JoiGraph} from "./JoiGraph.js";
+import {getStateObject, makeStateObject} from "./JoiStateProxy.js";
 
 export {JoiGraph} from "./JoiGraph.js";
 
@@ -84,10 +85,15 @@ export class JoiStore {
   _run(task) {
     let error, reducedState, startState = this.state;
     try {
-      reducedState = task.reducer(startState, task.data);                        //todo 1. passing in startState
+      const proxy = makeStateObject(this.state);           //todo clean up
+      task.reducer(proxy, task.data);
+      reducedState = getStateObject(this.state);
+      JoiGraph.deepFreeze(reducedState);
       if (startState !== reducedState) {
         this.state = this.computer.update(reducedState);
         this.observer.update(this.state);
+      } else {
+        this.state = reducedState;
       }
     } catch (err) {
       this.onError(error = err);
