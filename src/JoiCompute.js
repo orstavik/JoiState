@@ -108,7 +108,7 @@ export class JoiCompute {
       }
 
       functionsRun.push(funcObj);
-      let newComputedValue = funcObj.func.apply(null, argValues);
+      let newComputedValue = funcObj.func.apply(null, argValues);    //todo 2 here the computer is run...
 
       perFuncOldPathsCache = Object.assign({}, perFuncOldPathsCache);
       perFuncOldPathsCache[funKy] = pathsCache;
