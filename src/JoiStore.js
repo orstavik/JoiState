@@ -12,8 +12,18 @@ export class JoiStore {
     this.onCompletes = [];
     this.onErrors = [];
     this.state = JoiGraph.deepFreeze(initial || {});
-    this.que = [];
+    this. lock = false;
   }
+
+  /**
+   * Main control flow of the JoiStore machine.
+   * 0. check that a reducer hasn't been called on this JoiStore in this same microtask.
+   * 1. Call the single reduce function with the given data.
+   * 2. Update all computed values based on all the computed functions bound based on the state changes caused by the reducer.
+   * 3. Check all the observer functions bound based on the state changes done by the reducer and computer functions.
+   * 4. Call the onComplete hook with the newState, and other debug values if needed.
+   * X. If any Errors are thrown during reduction, computation or observation, then call onError.
+   */
 
   /**
    * Dispatch a reducer action.
@@ -23,12 +33,28 @@ export class JoiStore {
    * @param {{}} data object passed as second argument to the reducer.
    */
   dispatch(reducer, data) {
-    this.que.push({reducer, data, start: performance.now()});
-    if (this.que.length >= 2) //someone else is already running the que, this flow of control resigns
-      return;
-    while (this.que.length > 0) {
-      this._run(this.que[0]);
-      this.que.shift();
+    const task = {reducer, data, start: performance.now()};
+    if (this.lock) throw new Error('ReducerLoopError');
+    this.lock = true;
+    Promise.resolve().then(() => this.lock = false);
+
+    let error, reducedState, startState = this.state;
+    try {
+      const proxy = makeStateObject(this.state);           //todo clean up
+      task.reducer(proxy, task.data);
+      reducedState = getStateObject(this.state);
+      JoiGraph.deepFreeze(reducedState);
+      if (startState !== reducedState) {
+        this.state = this.computer.update(reducedState);
+        this.observer.update(this.state);
+      } else {
+        this.state = reducedState;
+      }
+    } catch (err) {
+      this.onError(error = err);
+    } finally {
+      for (let func of this.onCompletes)
+        func(this.state, task, startState, reducedState, this.computer, this.observer, error);
     }
   }
 
@@ -70,36 +96,5 @@ export class JoiStore {
    */
   onError(error) {
     throw error;
-  }
-
-  /**
-   * Main control flow of the JoiStore machine.
-   * 1. Call the single reduce function with the given data.
-   * 2. Update all computed values based on all the computed functions bound based on the state changes caused by the reducer.
-   * 3. Check all the observer functions bound based on the state changes done by the reducer and computer functions.
-   * 4. Call the onComplete hook with the newState, and other debug values if needed.
-   * X. If any Errors are thrown during reduction, computation or observation, then call onError.
-   * @param task
-   * @private
-   */
-  _run(task) {
-    let error, reducedState, startState = this.state;
-    try {
-      const proxy = makeStateObject(this.state);           //todo clean up
-      task.reducer(proxy, task.data);
-      reducedState = getStateObject(this.state);
-      JoiGraph.deepFreeze(reducedState);
-      if (startState !== reducedState) {
-        this.state = this.computer.update(reducedState);
-        this.observer.update(this.state);
-      } else {
-        this.state = reducedState;
-      }
-    } catch (err) {
-      this.onError(error = err);
-    } finally {
-      for (let func of this.onCompletes)
-        func(this.state, task, startState, reducedState, this.computer, this.observer, error);
-    }
   }
 }

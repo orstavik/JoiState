@@ -1,8 +1,8 @@
 import {JoiStore} from "../../src/JoiStore.js";
 
-describe('JoiStore Que', function () {
+describe('ReducerLoopError', function () {
 
-  it("Dispatches from observers that trigger new reducer actions must be queued.", function () {
+  it("Observer dispatching reducer sync.", function () {
 
     const reducerOne = function (state, e) {
       state.a = e;
@@ -20,18 +20,10 @@ describe('JoiStore Que', function () {
     state.observe(["a"], observeOne);
     state.observe(["a"], observeTwo);
 
-    let count = 0;
-    state.onComplete(function (newState) {
-      if (count === 0)
-        expect(newState).to.deep.equal({a: "A"});
-      else if (count === 1)
-        expect(newState).to.deep.equal({a: "B"});
-      else if (count <= 4)
-        expect(newState).to.deep.equal({a: "B", b: "C"});
-      else
-        assert(false);
-      count++;
-    });
-    state.dispatch(reducerOne, "A");
+    try{
+      state.dispatch(reducerOne, "A");
+    } catch(err){
+      expect(err.message).to.deep.equal('ReducerLoopError');
+    }
   });
 });

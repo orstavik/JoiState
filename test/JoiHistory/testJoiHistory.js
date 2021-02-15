@@ -106,6 +106,6 @@ describe('JoiHistory', function () {
       }
     });
     state.dispatch(reducerOne, "reduceData");
-    state.dispatch(reducerOne, "reduceData");
+    Promise.resolve().then(() => state.dispatch(reducerOne, "reduceData"))
   });
 });

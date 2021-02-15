@@ -84,8 +84,8 @@ describe('JoiStore basics', function () {
     };
     const state = new JoiStore({a: "a string"});
     state.observe([""], onNewState);
-    state.dispatch(reducerOne, "a string");   //should not trigger observe on root
-    state.dispatch(reducerOne, "hello");      //should trigger observe on root
+    state.dispatch(reducerOne, "a string");                                    //should not trigger observe on root
+    Promise.resolve().then(()=> state.dispatch(reducerOne, "hello"));          //should trigger observe on root
   });
 
   it(".bindCompute() - combining two parts of the state 1", function () {

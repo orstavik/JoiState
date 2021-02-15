@@ -1,12 +1,5 @@
 import {JoiGraph} from "./JoiGraph.js";
 
-class JoiStateStackOverflowError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'JoiStateStackOverflowError';
-  }
-}
-
 /**
  * The JoiCompute is a virtual machine for both computing and/or observing functions.
  * Both compute and observe functions should only run when the values of the argument paths that they
@@ -91,8 +84,6 @@ export class JoiCompute {
    * @private
    */
   static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack) {
-    JoiCompute.checkStackCount(stackRemainderCount, stack);
-
     let functionsRun = [];
     for (let funKy of Object.getOwnPropertyNames(functions)) {
       const funcObj = functions[funKy];
@@ -134,15 +125,5 @@ export class JoiCompute {
       res.push(nowValues[path]);
     }
     return changed ? res : null;
-  }
-
-  static checkStackCount(stackRemainderCount, stack) {
-    if (stackRemainderCount < stack.length) {
-      let functions = stack.map(card => "[" + card.functionsRun.map(funcObj => funcObj.funKy).join(", ") + "]").slice(0,10);
-      throw new JoiStateStackOverflowError(
-        "Infinite loop or too complex computes in JoiStore.\n" +
-        functions.join("\n")
-      );
-    }
   }
 }

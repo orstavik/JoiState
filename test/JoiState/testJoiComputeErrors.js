@@ -34,34 +34,40 @@ describe('JoiStore Errors', function () {
       }
     });
     state.dispatch(reducerFail, null);
-    state.dispatch(reducerOne, 3);
+    Promise.resolve().then(()=> state.dispatch(reducerOne, 3));
   });
 
-  it("make sure an infinite loop happens", function () {
-    const expectedErrorMsg =
-`JoiStateStackOverflowError: Infinite loop or too complex computes in JoiStore.
-[_c = sum(a, _b)]
-[_b = sum(a, _c)]
-[_c = sum(a, _b)]
-[_b = sum(a, _c)]
-[_c = sum(a, _b)]
-[_b = sum(a, _c)]
-[_c = sum(a, _b)]
-[_b = sum(a, _c)]
-[_c = sum(a, _b)]
-[_b = sum(a, _c)]`;
-    const reducerOne = function (state, detail) {
-      state.a = detail;
-    };
-    const sum = function (a, b) {
-      return (a || 0) + (b || 0);
-    };
-    const state = new JoiStore({a: 1});
-    state.compute(["a", "_c"], "_b", sum);   //infinite loop, when _b is updated,
-    try{
-      state.compute(["a", "_b"], "_c", sum);   // _c will need to be recalculated, and that triggers update of _b again
-    } catch (error) {
-      expect(expectedErrorMsg).to.be.equal(error.toString());
-    }
-  });
+//todo this loop should never happen
+  //todo when you add a computer like this, it should throw an error 'add time'.
+//   it("make sure an infinite loop happens", function () {
+//     const expectedErrorMsg =
+// `JoiStateStackOverflowError: Infinite loop or too complex computes in JoiStore.
+// [_c = sum(a, _b)]
+// [_b = sum(a, _c)]
+// [_c = sum(a, _b)]
+// [_b = sum(a, _c)]
+// [_c = sum(a, _b)]
+// [_b = sum(a, _c)]
+// [_c = sum(a, _b)]
+// [_b = sum(a, _c)]
+// [_c = sum(a, _b)]
+// [_b = sum(a, _c)]`;
+//     const reducerOne = function (state, detail) {
+//       state.a = detail;
+//     };
+//     const sum = function (a, b) {
+//       return (a || 0) + (b || 0);
+//     };
+//     const state = new JoiStore({a: 1});
+//     //todo this shouldn't be allowed. If you don't have all the arguments, then you cannot run.
+//     state.compute(["a", "_c"], "_b", sum);   //infinite loop, when _b is updated,
+//     //todo here, when we add a computer, then the computer will start to run.
+//     // It might be better to have the computers only run when a new state change is triggered.
+//     try{
+//       state.compute(["a", "_b"], "_c", sum);   // _c will need to be recalculated, and that triggers update of _b again
+//     } catch (error) {
+//       //todo here we should expect just a state === {a: 1}
+//       expect(expectedErrorMsg).to.be.equal(error.toString());
+//     }
+//   });
 });
