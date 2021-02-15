@@ -7,8 +7,8 @@ export {JoiGraph} from "./JoiGraph.js";
 export class JoiStore {
 
   constructor(initial) {
-    this.computer = new JoiCompute(100);
-    this.observer = new JoiCompute(1);
+    this.computer = new JoiCompute();
+    this.observer = new JoiCompute();
     this.onCompletes = [];
     this.onErrors = [];
     this.state = JoiGraph.deepFreeze(initial || {});

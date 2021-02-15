@@ -13,8 +13,7 @@ import {JoiGraph} from "./JoiGraph.js";
  */
 export class JoiCompute {
 
-  constructor(maxStackSize) {
-    this.maxStackSize = maxStackSize || 100;
+  constructor() {
     this.functionsRegister = {};               //immutable during .update
     this.pathRegister = {};                    //immutable during .update
     this.stack = [{functionsRun: [], pathsCache: {}}];    //mutable during .update
@@ -70,20 +69,19 @@ export class JoiCompute {
     let perFuncPreviousPathsCache = {};
     for (let funKy of Object.getOwnPropertyNames(this.functionsRegister))
       perFuncPreviousPathsCache[funKy] = previousRun;
-    return JoiCompute.__compute(this.functionsRegister, this.maxStackSize, pathsCache, perFuncPreviousPathsCache, []);
+    return JoiCompute.__compute(this.functionsRegister, pathsCache, perFuncPreviousPathsCache, []);
   }
 
   /**
    *
    * @param functions               read-only
-   * @param stackRemainderCount     count-down
    * @param pathsCache              immutable
    * @param perFuncOldPathsCache    immutable
    * @param stack
    * @returns {Object[]} all the pathsCache, the full stack.
    * @private
    */
-  static __compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, stack) {
+  static __compute(functions, pathsCache, perFuncOldPathsCache, stack) {
     let functionsRun = [];
     for (let funKy of Object.getOwnPropertyNames(functions)) {
       const funcObj = functions[funKy];
@@ -111,7 +109,7 @@ export class JoiCompute {
       pathsCache = Object.assign({}, pathsCache);
       pathsCache[funcObj.returnPath] = newComputedValue;
       const temporaryResult = [{functionsRun, pathsCache}].concat(stack);
-      return JoiCompute.__compute(functions, stackRemainderCount, pathsCache, perFuncOldPathsCache, temporaryResult);
+      return JoiCompute.__compute(functions, pathsCache, perFuncOldPathsCache, temporaryResult);
     }
     let finalResult = {functionsRun, pathsCache};
     return [finalResult];
