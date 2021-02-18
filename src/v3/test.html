@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<script type="module">
+  import {JoiStore} from "./JoiStore.js";
+
+  const functions = {
+    set: function set(a) {
+      return a;
+    },
+    sum: function sum(a, b) {
+      return a + b;
+    },
+    log: function log(c) {
+      console.log(c);
+    }
+  }
+
+  const actions = [
+    [[2], 'set', ['a']],             //computer
+    [['a', 'b'], 'sum', ['c']],      //computer
+    [['c'], 'log'],                  //observer
+    [[true], 'set', ['output']]      //computer todo run all observers last.
+  ];
+
+
+  const store = new JoiStore({}, actions, functions);
+
+  store.reduce('b', 5);
+  //todo how do I reset the state properties, so that I know which state properties to use?
+  //todo states coming in from the reducer should be reusable, and not be able to be overwritten.
+  //todo .... How the hell to separate between this type of data?
+  //todo reduced states are permanent, they are prefixed with getPrevious
+  //todo no, I need to distinguish between the previous state made by reducers (which accumulates), and then the state from computers which are forgettable. This means that when we call a reducer on some state, this is added to the 'reducedState'. Which is remembered from time to time.
+  //and then we run computers, and then we run observers. And we only pass in the accumulated reduced state into the computer machine, the rest of the state is forgotten (except within previous caching functions).
+  //todo is there another way to achieve this effect? here we have a layer cake reduce/compute/observe.. the reduce works on one part of the state. The reduced state is off limits for the computers. And the observers don't run until the computers are finished, that is no pending computer. But that is a problem too. We might like to have observers run on partial results. Only wait with one part of the state while we await those parts of the system code. But that would be very very sticky.. Not a good thing.
+  debugger
+  store.reduce('b', 3);
+
+</script>
+
+</body>
+</html>

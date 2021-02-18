@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<script type="module">
+  import {JoiStore} from "./JoiStore.js";
+
+  window.objs = [];
+  const functions = {
+    log: function(b){
+      window.objs.push(b);
+      console.log(b);                         //todo test the JoiStore.reuse
+    }
+  };
+  const actions = [
+    [['b'], 'log']
+  ];
+
+  const store = new JoiStore({}, actions, functions);
+
+  const one = 1;
+  const two = 2;
+  store.reduce('b', {
+    text: {
+      alpha: 'acbd'
+    },
+    num: one
+  });
+  store.reduce('b', {
+    text: {
+      alpha: 'acbd'
+    },
+    num: one
+  });
+  store.reduce('b', {
+    text: {
+      alpha: 'acbd'
+    },
+    num: two
+  });
+
+</script>
+
+</body>
+</html>

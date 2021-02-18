@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<script type="module">
+  import {JoiStore} from "./JoiStore.js";
+
+  const ar = [];
+
+  const functions = {
+    test: function test(x) {
+      return {hello: {sunshine: true}, x: x};
+    },
+    test2: function test2(x) {
+      ar.push(x);
+    }
+  }
+
+  const actions = [
+    [['b'], '!test', ['x']],             //computer
+    [['x'], 'test2'],                  //observer
+  ];
+
+
+  const store = new JoiStore({}, actions, functions);
+
+  store.reduce('b', 5);
+  store.reduce('b', 3);
+  store.reduce('b', 5);
+  console.log(ar);
+  console.log(ar[0] !== ar[1]);
+  console.log(ar[0] === ar[2]);
+  debugger
+
+</script>
+
+</body>
+</html>
