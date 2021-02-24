@@ -5,10 +5,12 @@ describe('builtins', function () {
   it("equals", function () {
 
     const actions = [
-      [['something', '*a', '*b', '*c'], 'equals', ['ifa', 'ifb', 'ifc', 'else']]
+         //test      //1   //2   //3                //1     //2     //3
+      [['something', '*a', '*b', '*c'], 'equals', ['if_a', 'if_b', 'if_c', 'else']]
     ];
 
-    const state = new JoiStore({something: 'one'}, actions, {});
+    const state = new JoiStore({}, actions, {});
+
     state.reduce('something', 'bob');
     expect(state.state).to.deep.equals({
       something: 'bob',
@@ -18,15 +20,15 @@ describe('builtins', function () {
     expect(state.state).to.deep.equals({
       something: 'bob',
       a: 'bob',
-      ifa: 'bob',
+      if_a: 'bob',
     });
     state.reduce('b', 'bob');
     expect(state.state).to.deep.equals({
       something: 'bob',
       a: 'bob',
       b: 'bob',
-      ifa: 'bob',
-      ifb: 'bob',
+      if_a: 'bob',
+      if_b: 'bob',
     });
     state.reduce('c', 'bob');
     expect(state.state).to.deep.equals({
@@ -34,9 +36,18 @@ describe('builtins', function () {
       a: 'bob',
       b: 'bob',
       c: 'bob',
-      ifa: 'bob',
-      ifb: 'bob',
-      ifc: 'bob',
+      if_a: 'bob',
+      if_b: 'bob',
+      if_c: 'bob',
+    });
+    state.reduce('b', 'alice');
+    expect(state.state).to.deep.equals({
+      something: 'bob',
+      a: 'bob',
+      b: 'alice',
+      c: 'bob',
+      if_a: 'bob',
+      if_c: 'bob',
     });
   });
 });
