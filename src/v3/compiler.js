@@ -1,4 +1,3 @@
-
 // todo
 // 1. syntax check for dead end states. We do this by checking each action. If the action is missing a required state (ie. a required state is neither an output of any other action, or a start variable), then we remove this action. We repeat this function recursively until there are no such actions removed in an entire pass). This will remove any loose ends. This can be done at compile time.
 //2. if this removes response, or any observers, then this will of course clear the way for any errors.
@@ -12,16 +11,16 @@ export function reuse(a, b) {
   if (a === b || !(a instanceof Object && b instanceof Object))
     return a;
   let mismatch = false;
+  let c = {};
   for (let key in a) {
     const aValue = a[key];
     const bValue = b[key];
-    if (reuse(aValue, bValue) === bValue)
-      a[key] = bValue;
-    else
-      mismatch = true;
+    c[key] = reuse(aValue, bValue) === bValue ? bValue : (mismatch = true) && aValue;
   }
-  return mismatch || Object.keys(a).length !== Object.keys(b).length? a : b;
+  return !mismatch && Object.keys(a).length === Object.keys(b).length ? b : c;
 }
+
+const reuseImpl = reuse;
 
 export const ROOT = {op: 'ROOT'};
 export const FRAME = {op: 'FRAME'};
@@ -171,9 +170,9 @@ export const BUILTIN = {                          //todo these Builtin functions
     if (!path)
       return new JoiStateResult([obj]);
     if (!(obj instanceof Object))
-      throw new JoiStateResult([,new SyntaxError('The action "get" is given an illegal object: ' + typeof obj)]);
+      throw new JoiStateResult([, new SyntaxError('The action "get" is given an illegal object: ' + typeof obj)]);
     if (typeof path !== 'string')
-      throw new JoiStateResult([,new SyntaxError('The action "get" is given an illegal path: ' + typeof path)]);
+      throw new JoiStateResult([, new SyntaxError('The action "get" is given an illegal path: ' + typeof path)]);
     for (let segment of path.split('.')) {
       if (obj instanceof Headers || obj instanceof URLSearchParams)
         obj = obj[segment] || obj.get(segment);
