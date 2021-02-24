@@ -228,7 +228,7 @@ export const BUILTIN = {                          //todo these Builtin functions
   //however, with multiple outputs, there is no need to choose. You can have both at the same time
   //[test, 'one', 'two', 'one', 'one'], equals, [a,b,c,d,else]
   //if test === 'one', then the output will be [a='one', , c='one', d='one']
-  '===': function equals(something, ...testCases) {
+  equals: function equals(something, ...testCases) {
     const res = [];
     let match = false;
     for (let i = 0; i < testCases.length; i++) {

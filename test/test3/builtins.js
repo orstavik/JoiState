@@ -2,10 +2,10 @@ import {JoiStore} from "../../src/v3/JoiStore.js";
 
 describe('builtins', function () {
 
-  it("===", function () {
+  it("equals", function () {
 
     const actions = [
-      [['something', '*a', '*b', '*c'], '===', ['ifa', 'ifb', 'ifc', 'else']]
+      [['something', '*a', '*b', '*c'], 'equals', ['ifa', 'ifb', 'ifc', 'else']]
     ];
 
     const state = new JoiStore({something: 'one'}, actions, {});
