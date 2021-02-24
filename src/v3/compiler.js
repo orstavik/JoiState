@@ -242,6 +242,13 @@ export const BUILTIN = {                          //todo these Builtin functions
       res[testCases.length] = something;
     return new JoiStateResult(res);
   },
+  and: function and(...testCases) {
+    for (let i = 0; i < testCases.length; i++) {
+      if(!testCases[i])
+        return new JoiStateResult([,true]);
+    }
+    return new JoiStateResult([true]);
+  },
   //todo
   // 1. all the primitive math operators in js
   // 2. all the primitive comparator operators in js
