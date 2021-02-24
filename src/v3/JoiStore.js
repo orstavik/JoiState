@@ -9,15 +9,6 @@ function deepFreeze(obj) {
     deepFreeze(val);
 }
 
-function reduceImpl(state, propName, newValue, reducerProps) {
-  newValue = reuse(newValue, state[propName]);
-  if (newValue === state[propName])
-    return state;
-  const nextState = reducerProps.reduce((res, prop) => (res[prop] = state[prop], res), {});
-  nextState[propName] = newValue;
-  return nextState;
-}
-
 //todo do we observe cycle, or do we observe change?
 // we observe change, and so we must dirtycheck all the properties to see if the arguments are the same as last time.
 // if we want to observe cycle, then we add NaN as a fixed parameter, as NaN === NaN => trick
@@ -30,19 +21,16 @@ export class JoiStore {
     //todo the keys can then be sorted alphabetically/numerically
     let {actions, declarations: primitives} = compile(actionsIn); //throw if compiler or linking error
     declarations = Object.assign(declarations, primitives, BUILTIN);
-    actions.forEach(action => action[2] = declarations[action[2]]);  //link up functions in actions
-    //what is the threshold for ready?
+    actions.forEach(action => action[2] = declarations[action[2]]);  //link up functions in actions   //todo what is the threshold for ready?
     this.actions = actions;
 
-    this.state = initialState;
+    this.state = this.reducedState = initialState;
     deepFreeze(this.state);                            //todo how do we want to handle the deepFreeze
     this.lock = false;
     this.queue = [];
-    this.reducerProps = [];
   }
 
   async reduce(propName, newValue) {
-    this.reducerProps.indexOf(propName) === -1 && this.reducerProps.push(propName);
     this.queue.push([propName, newValue]);
     if (this.lock)
       return;
@@ -50,9 +38,14 @@ export class JoiStore {
 
     while (this.queue.length) {
       let [propName, newValue] = this.queue.shift();
-      const nextState = reduceImpl(this.state, propName, newValue, this.reducerProps);
-      if (nextState === this.state)   //the reducer do not produce state, so no operation should run
+
+      newValue = reuse(newValue, this.reducedState[propName]);
+      if(newValue === this.reducedState[propName])
         continue;
+      deepFreeze(newValue);
+      this.reducedState = Object.assign({}, this.reducedState);
+      this.reducedState[propName] = newValue;
+      const nextState = Object.assign({}, this.reducedState);
 
       //todo how to add declarations to the frame? i somehow need to add the ready check when the actions are compiled
 
