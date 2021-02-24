@@ -1,5 +1,5 @@
 import {run} from "./statemachine.js";
-import {compile, parseParam, reuse} from "./compiler.js";
+import {BUILTIN, compile, parseParam, reuse} from "./compiler.js";
 
 function deepFreeze(obj) {
   if (typeof obj !== 'object' || obj === null)
@@ -29,7 +29,7 @@ export class JoiStore {
     //todo actions should be a map with keys, not an array with numbers. as the actions id are now different.
     //todo the keys can then be sorted alphabetically/numerically
     let {actions, declarations: primitives} = compile(actionsIn); //throw if compiler or linking error
-    declarations = Object.assign(declarations, primitives);
+    declarations = Object.assign(declarations, primitives, BUILTIN);
     actions.forEach(action => action[2] = declarations[action[2]]);  //link up functions in actions
     //what is the threshold for ready?
     this.actions = actions;

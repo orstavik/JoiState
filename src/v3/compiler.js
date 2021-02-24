@@ -219,24 +219,33 @@ export const BUILTIN = {                          //todo these Builtin functions
     res[outputPos] = arg;
     return new JoiStateResult(res);
   },
-  //todo untested. the primitive functions can be checked to see if their arguments and output counts are valid.
-  equals: function equals(something, ...testCases) {
+  //todo
+  // Multiple equals have different roles. You can imagine equals in:
+  // if (a === x) then a() else if(b === x) then b()
+  // or
+  // if(a === x && b === x) then ab()
+  //
+  //however, with multiple outputs, there is no need to choose. You can have both at the same time
+  //[test, 'one', 'two', 'one', 'one'], equals, [a,b,c,d,else]
+  //if test === 'one', then the output will be [a='one', , c='one', d='one']
+  '===': function equals(something, ...testCases) {
     const res = [];
+    let match = false;
     for (let i = 0; i < testCases.length; i++) {
       let testCase = testCases[i];
       if (something === testCase) {
         res[i] = something;
-        return new JoiStateResult(res);
+        match = true;
       }
     }
-    res[testCases.length] = something;
+    if(!match)
+      res[testCases.length] = something;
     return new JoiStateResult(res);
   },
   //todo
   // 1. all the primitive math operators in js
   // 2. all the primitive comparator operators in js
   // 3. add some cool ternary operators, such as a<=x<=b, where x is in between a and b
-  // 4. how to distinguish a if/else and double equals in '===': if (a === x) then a() else if(b === x) then b() vs. if (a===x && b===x) then ab()? make the latter '&=='?
   // 5. ^ for function references as arguments? ^^ for references to the function id?
   // 6. loop structures. use ...in front of function name to trigger an iteration of all arguments that begin with ...?
 
