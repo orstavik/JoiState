@@ -47,23 +47,18 @@ function paramsToArguments(params, state, frame) {
 }
 
 function firstReadyAction(frame) {
-  // for (let i = 0; i < frame.actions.length; i++) {
-  //   let action = frame.actions[i];
-
   //1. filter out all the actions that has already been invoked
-  const actions = frame.actions.filter(([id]) => !(id in frame.invocations));
+  // const actions = frame.actions.filter(([id]) => !(id in frame.invocations));
 
-  for (let action of actions) {
+  for (let action of frame.actions) {
     let [id, params, fun, outputs] = action;
     //1. already invoked
-    // if (id in frame.invocations)
-    //   continue;
+    if (id in frame.invocations)
+      continue;
 
     //2. all the outputs are already filled, this function will not run.
     if (outputs.length && outputs.every(key => key in frame.state)) {
       frame.invocations[id] = {count: frame.count++, status: 'canceled'};
-      // action.push(frame.count++);
-      // action.push('canceled');
       continue;
     }
 
@@ -76,16 +71,10 @@ function firstReadyAction(frame) {
     //4. &&blocking parameter
     if (typeof args === 'string') {
       frame.invocations[id] = {count: frame.count++, status: '&&', args};
-      // action.push(frame.count++);
-      // action.push('&&');
-      // action.push(args);
     }
     //5. return next ready action with arguments
     else /*if (args instanceof Array)*/{
       frame.invocations[id] = {count: frame.count++, status: 'i', args};
-      // action.push(frame.count++);
-      // action.push('i');
-      // action.push(args);
       return {action, args};
     }
   }
@@ -102,6 +91,7 @@ function setValue(frame, action, {results}) {
   const outputState = [];
   for (let i = 0; i < outputs.length || i < results.length; i++) {
     let output = outputs[i];
+    if (output === undefined) output = "_action_" + id;       //todo how to make this work.
     if (!(i in results)) {
       outputState[i] = 'u';
     } else if (output in frame.state) {
@@ -112,9 +102,6 @@ function setValue(frame, action, {results}) {
     }
   }
   frame.resolutions[id] = {count: frame.count++, outputState, results};
-  // action.push(frame.count++);
-  // action.push(outputState);
-  // action.push(results);
 }
 
 export function run(frame) {
@@ -122,7 +109,7 @@ export function run(frame) {
     // trace(frame);      //trace before invocation. state machine looses control //todo replace this with something else, if we need
     const result = runFun(action[2], args);
     if (result instanceof Promise) {
-      action[5] += 'a';                           //add data for async invocation
+      frame.invocations[action[0]].status += 'a';                           //add data for async invocation
       result.then(val => (setValue(frame, action, val), run(frame)));
     } else
       setValue(frame, action, result);

@@ -1,22 +1,5 @@
 import {run} from "./statemachine.js";
-import {compile, parseParam} from "./compiler.js";
-
-//A is the new object, B is the old object, A is the object we return.
-export function reuse(a, b) {
-  if (a === b)
-    return b;
-  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null)
-    return a;
-  let mismatch = Object.keys(a).length !== Object.keys(b).length;
-  for (let [key, aValue] of Object.entries(a)) {
-    const bValue = b[key];
-    if (reuse(aValue, bValue) === bValue)
-      a[key] = bValue;
-    else
-      mismatch = true;
-  }
-  return mismatch ? a : b;
-}
+import {compile, parseParam, reuse} from "./compiler.js";
 
 function deepFreeze(obj) {
   if (typeof obj !== 'object' || obj === null)
@@ -25,39 +8,6 @@ function deepFreeze(obj) {
   for (let val in Object.values(obj))
     deepFreeze(val);
 }
-
-function findActionThatOutput(prop, actions) {
-  return actions.find(([i, p, f, o, e]) => o === prop || e === prop);
-}
-
-//The stateMachine a) starts the inner statemachine and b) monitors the state of the response and observers.
-function stateMachine(actions, state, tracers, declarations) {
-
-  // function onTrace(frame, txt) {
-    //todo tracers key must contain the txt, and only run a tracer one time.
-    // tracers[txt] && tracers[txt](frame);
-    //todo this doesn't work right now..
-  // }
-
-
-  // const actionsClone = actions.map(action=> action.slice());
-  //todo actions should be a map with keys, not an array with numbers. as the actions id are now different.
-  //todo the keys can then be sorted alphabetically/numerically
-  run({actions/*: actionsClone*/, state, /*onTrace, */count: 0, invocations: {}, resolutions: {}, declarations});
-
-  //todo replace this with a different actions and a custom method.
-  // if ('ready' in state)
-  //   return state.ready;
-  // if (!findActionThatOutput('ready', actions))
-  //   return true;
-  // let readyResolver;
-  // let ready = new Promise(r => readyResolver = r);
-  // tracers.eo = tracers.eo || [];
-  // tracers.eo.push(() => 'ready' in state && readyResolver(state.ready));
-  // return ready;
-}
-
-//todo the reducer makes a new state using only the "reducer properties" and
 
 function reduceImpl(state, propName, newValue, reducerProps) {
   newValue = reuse(newValue, state[propName]);
@@ -76,13 +26,16 @@ export class JoiStore {
 
   constructor(initialState = {}, actionsIn = [], declarations = {}) {
     //compile and link up the actions coming in
+    //todo actions should be a map with keys, not an array with numbers. as the actions id are now different.
+    //todo the keys can then be sorted alphabetically/numerically
     let {actions, declarations: primitives} = compile(actionsIn); //throw if compiler or linking error
     declarations = Object.assign(declarations, primitives);
     actions.forEach(action => action[2] = declarations[action[2]]);  //link up functions in actions
+    //what is the threshold for ready?
     this.actions = actions;
 
     this.state = initialState;
-    deepFreeze(this.state);
+    deepFreeze(this.state);                            //todo how do we want to handle the deepFreeze
     this.lock = false;
     this.queue = [];
     this.reducerProps = [];
@@ -103,11 +56,10 @@ export class JoiStore {
 
       //todo how to add declarations to the frame? i somehow need to add the ready check when the actions are compiled
 
-      let ready = stateMachine(this.actions, nextState, {});   //run the state machine
-      if (ready instanceof Promise)                             //if this is an async statemachine, then await
-        ready = await ready;
-      if (ready)                                                //if when ready, update the state.
-        this.state = nextState;
+      run({actions: this.actions, state: nextState, count: 0, invocations: {}, resolutions: {}, declarations: {}});
+      this.state = nextState;
+      // if (nextState._ready instanceof Promise)          //if this is an async statemachine, then await
+      //   nextState._ready = await nextState._ready;      //todo here we are doing await..
       deepFreeze(this.state);   //todo should we do this?? to lock the state for future promise returns?
     }
     this.lock = false;
@@ -133,8 +85,8 @@ export class JoiStore {
     return id;
   }
 
-  free(id) {
-    const index = this.actions.findIndex(([actionId]) => actionId === id);
+  free(id) {           //unregister an action from the actions registry.
+    const index = this.actions.findIndex(([actionId]) => actionId.startsWith(id));
     return index >= 0 ? this.actions.splice(index, 1)[0] : undefined;
   }
 }

@@ -1,10 +1,27 @@
+
 // todo
 // 1. syntax check for dead end states. We do this by checking each action. If the action is missing a required state (ie. a required state is neither an output of any other action, or a start variable), then we remove this action. We repeat this function recursively until there are no such actions removed in an entire pass). This will remove any loose ends. This can be done at compile time.
 //2. if this removes response, or any observers, then this will of course clear the way for any errors.
 
 
 import {JoiStateResult} from "./statemachine.js";
-import {reuse as reuseImpl} from "./JoiStore.js";
+
+//A is the new object, B is the old object, A is the object we return.
+//attention mutates argument a.
+export function reuse(a, b) {
+  if (a === b || !(a instanceof Object && b instanceof Object))
+    return a;
+  let mismatch = false;
+  for (let key in a) {
+    const aValue = a[key];
+    const bValue = b[key];
+    if (reuse(aValue, bValue) === bValue)
+      a[key] = bValue;
+    else
+      mismatch = true;
+  }
+  return mismatch || Object.keys(a).length !== Object.keys(b).length? a : b;
+}
 
 export const ROOT = {op: 'ROOT'};
 export const FRAME = {op: 'FRAME'};
@@ -12,22 +29,17 @@ export const EMPTY = {op: 'EMPTY'};
 
 // Parse parameters into either primitive arguments or <op><state> objects.
 
+//todo should undefined become null, make the thing jsony?
 export function parseParam(p) {
   //primitives
   if (typeof p !== 'string')
     return p;
-  //todo test if this works ok.
-  // if (p === null) return null;
-  // if (p === undefined) return undefined;  //should this become null, make the thing jsony?
-  // if (p === false) return false;
-  // if (p === true) return true;
-  // const num = parseFloat(p);
-  // if (num === p) return num;
 
   //todo these are not yet implemented
   if (p === '*') return ROOT;    //todo reserved words for the full state object
   if (p === '**') return FRAME;  //todo reserved word for the frame (actions, declarations, trace), needed by logs
-  if (p === '') return EMPTY;   //todo reserved word for EMPTY
+  if (p === '') return EMPTY;    //todo reserved word for EMPTY
+  //todo add ^ and ^^ as function references operators?
 
   if (p[0] === '"') return p.substr(1, p.length - 2);
   if (p[0] === "'") return p.substr(1, p.length - 2);
@@ -145,10 +157,8 @@ export function compile(actions) {
   let compileOutput = compileCacheActions(actions, operators);
   actions = compileOutput.actions;
   let declarations = compileOutput.declarations;
-  actions.forEach(action => action[1] = action[1].map(p => parseParam(p)));
+  actions.forEach(action => action[1] = action[1].map(p => parseParam(p))); //todo this is linking, here we should maybe link some arguments too..
   return {actions, declarations};
-  // actions2.forEach(action => action[1] = action[1].map(p => parseParam(p)));
-  // return {actions: actions2, declarations};
 }
 
 /**
@@ -190,5 +200,15 @@ export const BUILTIN = {                          //todo these Builtin functions
     }
     res[testCases.length] = something;
     return new JoiStateResult(res);
-  }
+  },
+  //todo
+  // 1. all the primitive math operators in js
+  // 2. all the primitive comparator operators in js
+  // 3. add some cool ternary operators, such as a<=x<=b, where x is in between a and b
+  // 4. how to distinguish a if/else and double equals in '===': if (a === x) then a() else if(b === x) then b() vs. if (a===x && b===x) then ab()? make the latter '&=='?
+  // 5. ^ for function references as arguments? ^^ for references to the function id?
+  // 6. loop structures. use ...in front of function name to trigger an iteration of all arguments that begin with ...?
+
+  //todo
+  // a. when we are linking, we could link up with primitive js functions, such as Array.map.
 }

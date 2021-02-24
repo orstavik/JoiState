@@ -28,6 +28,10 @@
 
   const store = new JoiStore({}, actions, functions);
 
+  store.observe(['b'], function (b) {
+    console.log(b);
+  });
+  store.reduce('b', 5);
   store.reduce('b', 5);
   store.reduce('b', 3);
   console.log(ar);
