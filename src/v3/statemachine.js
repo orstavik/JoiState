@@ -32,12 +32,14 @@ function paramsToArguments(params, state, frame) {
       args[i] = p;
     else if (p.op === 'ROOT')
       args[i] = state;
-    else if (p.op === 'FRAME')   //todo missing declarations
+    else if (p.op === 'FRAME')                  //todo frame.declarations doesn't exist
       args[i] = {trace: makeTrace(frame), actions: frame.actions, declarations: frame.declarations};
     else if (p.op === 'EMPTY')
       ;//empty
     else if (p.op === '&&' && p.key in state)
       return '&&' + p.key;
+    else if (p.op === '&&')     //todo && can only be included at the end of the arguments list.. for now..
+      ;
     else if (p.op === '*' || p.key in state)
       p.op !== '&' && (args[i] = state[p.key]);
     else

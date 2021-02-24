@@ -2,7 +2,7 @@ import {JoiStore} from "../../src/v3/JoiStore.js";
 
 describe('#reuse', function () {
 
-  it("#reuse", function () {
+  it("#reuse in output", function () {
 
     const declarations = {
       test: function (a) {
@@ -35,5 +35,28 @@ describe('#reuse', function () {
     assert(state2.b.obj === state1.b.obj);
     assert(state1._reuse_0_b.obj === state1.b.obj);
     assert(state2._reuse_0_b.obj !== state2.b.obj);
+  });
+
+  it("##skip if arguments are unchanged", function () {
+
+    const tstOut = [];
+
+    const declarations = {
+      test: function (a) {
+        return tstOut.push(a);
+      }
+    }
+    const actions = [
+      [['a'], '##test']
+    ];
+
+    const state = new JoiStore({}, actions, declarations);
+    assert(tstOut.length === 0);
+    state.reduce('a', 1);
+    assert(tstOut.length === 1);
+    state.reduce('a', 1);
+    assert(tstOut.length === 1);
+    state.reduce('a', 2);
+    assert(tstOut.length === 2);
   });
 });

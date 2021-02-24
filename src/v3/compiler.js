@@ -1,3 +1,4 @@
+
 // todo
 // 1. syntax check for dead end states. We do this by checking each action. If the action is missing a required state (ie. a required state is neither an output of any other action, or a start variable), then we remove this action. We repeat this function recursively until there are no such actions removed in an entire pass). This will remove any loose ends. This can be done at compile time.
 //2. if this removes response, or any observers, then this will of course clear the way for any errors.
@@ -45,20 +46,18 @@ export function parseParam(p) {
   if (p[0] === "_") return {op: '', key: p};  //todo hack to avoid having the parseParam change the p
 
   //<operator [*!&]{0,2}><state [a-z][a-zA-Z]*>
-  const [match, op, key] = p.match(/([*!&]{0,2})([a-z][a-zA-Z]*)/) || [];
+  const [match, op, key] = p.match(/([*!&]{0,2})([a-z_][a-zA-Z_0-9]*)/) || [];
   if (match)
     return {op, key};
   throw new SyntaxError('Illegal parameter: ' + p);
 }
 
-//EMPTY reserved word, and adding the
-// const EMPTY = {};
-
 //each operator consists of two functions: compiler and makePrimitives.
 //the compiler translates a normalized action into a set of new actions used by the compiler.
 //the makePrimitives creates a list of primitive functions that the compiled output depends on.
 
-//[[...args], #fun, [...outputs]]
+// #reuse
+// [[...args], #fun, [...outputs]]
 //   =>
 //[[...args], fun, [..._tempID_outputs]]
 //[['actionId', ..._tempID_outputs], reuse, [...outputs]]
@@ -82,6 +81,38 @@ const hashReuse = {
     return [
       [id + "#1", params, fun, _tmpOutputs],
       [id + "#2", [`"${id}"`, ..._tmpOutputs], '#reuse', outputs]
+    ];
+  }
+};
+
+// ##skip
+//[[...args], ##fun, [...outputs]]
+//   =>
+//[['skip${id}', ...args], skip, [_skip_id, _dont_skip_id]]
+//[[&&_skip_id, ...args], fun, [...outputs]]
+const hashHashSkip = {
+  makePrimitives: function () {
+    const _prev = {};
+    return {
+      '##skip': function skip(id, ...args) {
+        const prev = _prev[id];
+        _prev[id] = args;
+        if(!prev)
+          return new JoiStateResult([, true]);
+        for (let i = 0; i < args.length; i++) {
+          if (prev[i] !== args[i])
+            return new JoiStateResult([,true]);
+        }
+        return new JoiStateResult([true]);
+      }
+    }
+  },
+  compiler: function ([id, params, fun, outputs]) {
+    fun = fun.substr(2);
+    const skipName = `_skip_${id}`;
+    return [
+      [id + "##1", [`"${skipName}"`, ...params], '##skip', [skipName, `_dont${skipName}`]],
+      [id + "##2", [...params, `&&${skipName}`], fun, outputs]
     ];
   }
 };
@@ -128,6 +159,7 @@ const bangCache = {
 
 const operators = {
   '!': bangCache,
+  '##': hashHashSkip,
   '#': hashReuse,
 };
 
