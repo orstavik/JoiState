@@ -1,3 +1,5 @@
+import {EMPTY} from "./compiler.js";
+
 export class JoiStateResult {
   constructor(array) {
     this.results = array;
@@ -28,14 +30,12 @@ function paramsToArguments(params, state, frame) {
   const args = [];
   for (let i = 0; i < params.length; i++) {
     let p = params[i];
-    if (!(p instanceof Object))
+    if (!(p instanceof Object) || p === EMPTY)
       args[i] = p;
     else if (p.op === 'ROOT')
       args[i] = state;
     else if (p.op === 'FRAME')                  //todo frame.declarations doesn't exist
       args[i] = {trace: makeTrace(frame), actions: frame.actions, declarations: frame.declarations};
-    else if (p.op === 'EMPTY')
-      ;//empty
     else if (p.op === '&&' && p.key in state)
       return '&&' + p.key;
     else if (p.op === '&&')     //todo && can only be included at the end of the arguments list.. for now..

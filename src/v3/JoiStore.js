@@ -1,14 +1,14 @@
 import {run} from "./statemachine.js";
 import {BUILTIN, compile, parseParam, reuse} from "./compiler.js";
 
-function deepFreeze(obj) {
-  if (typeof obj !== 'object' || obj === null)
-    return;
-  Object.freeze(obj);
-  for (let val in Object.values(obj))
-    deepFreeze(val);
-}
-
+// function deepFreeze(obj) {
+//   if (typeof obj !== 'object' || obj === null)
+//     return;
+//   Object.freeze(obj);
+//   for (let val in Object.values(obj))
+//     deepFreeze(val);
+// }
+//
 //todo do we observe cycle, or do we observe change?
 // we observe change, and so we must dirtycheck all the properties to see if the arguments are the same as last time.
 // if we want to observe cycle, then we add NaN as a fixed parameter, as NaN === NaN => trick
@@ -24,8 +24,8 @@ export class JoiStore {
     actions.forEach(action => action[2] = declarations[action[2]]);  //link up functions in actions   //todo what is the threshold for ready?
     this.actions = actions;
 
+    // deepFreeze(initialState);                            //todo how do we want to handle the deepFreeze?
     this.state = this.reducedState = initialState;
-    deepFreeze(this.state);                            //todo how do we want to handle the deepFreeze
     this.lock = false;
     this.queue = [];
   }
@@ -42,7 +42,7 @@ export class JoiStore {
       newValue = reuse(newValue, this.reducedState[propName]);
       if(newValue === this.reducedState[propName])
         continue;
-      deepFreeze(newValue);
+      // deepFreeze(newValue);
       this.reducedState = Object.assign({}, this.reducedState);
       this.reducedState[propName] = newValue;
       const nextState = Object.assign({}, this.reducedState);
@@ -53,7 +53,7 @@ export class JoiStore {
       this.state = nextState;
       // if (nextState._ready instanceof Promise)          //if this is an async statemachine, then await
       //   nextState._ready = await nextState._ready;      //todo here we are doing await..
-      deepFreeze(this.state);   //todo should we do this?? to lock the state for future promise returns?
+      // deepFreeze(this.state);   //todo should we do this?? to lock the state for future promise returns?
     }
     this.lock = false;
   }

@@ -23,9 +23,7 @@ export function reuse(a, b) {
 
 const reuseImpl = reuse;
 
-export const ROOT = {op: 'ROOT'};
-export const FRAME = {op: 'FRAME'};
-export const EMPTY = {op: 'EMPTY'};
+export const EMPTY = {};
 
 // Parse parameters into either primitive arguments or <op><state> objects.
 
@@ -36,8 +34,8 @@ export function parseParam(p) {
     return p;
 
   //todo these are not yet implemented
-  if (p === '*') return ROOT;    //todo reserved words for the full state object
-  if (p === '**') return FRAME;  //todo reserved word for the frame (actions, declarations, trace), needed by logs
+  if (p === '*') return {op: 'ROOT'};    //todo reserved words for the full state object
+  if (p === '**') return {op: 'FRAME'};  //todo reserved word for the frame (actions, declarations, trace), needed by logs
   if (p === '') return EMPTY;    //todo reserved word for EMPTY
   //todo add ^ and ^^ as function references operators?
 
@@ -156,11 +154,36 @@ const bangCache = {
   }
 };
 
+//todo this should always be the innermost operator. Do we need some priority rules/values for our operators?
+const questionMutationCheck = {
+  makePrimitives: function () {
+    return {
+      mutationCheck: function mutationCheck(before, ...args) {
+        const after = JSON.stringify(args);
+        if(before === EMPTY || before === after)
+          return new JoiStateResult([after]);
+        return new JoiStateResult([, {before, after}]);
+      }
+    };
+  },
+  compiler: function ([id, params, fun, outputs]) {
+    fun = fun.substr(1);
+    const mutationCheck1 = `_mutation_check_${id}_1`;
+    const mutationCheck2 = `_mutation_check_${id}_2`;
+    const mutationError = `_mutation_error_${id}`;
+    return [
+      [id + '?1', ['', ...params], 'mutationCheck', [mutationCheck1]],
+      [id + '?2', [...params], fun, outputs],
+      [id + '?3', [mutationCheck1, ...params], 'mutationCheck', [mutationCheck2, mutationError]],
+    ];
+  }
+};
 
 const operators = {
   '!': bangCache,
   '##': hashHashSkip,
   '#': hashReuse,
+  '?': questionMutationCheck,
 };
 
 //todo make this output an object/a map with the actions, and not an  array?
