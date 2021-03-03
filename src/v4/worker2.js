@@ -193,11 +193,17 @@ const actions = [
 
   [['action', '"json"', '"delete"', '"getsessions"'], equals, ['doJson', 'doDelete', 'doGetsessions', 'invalidAction']],
 
-  [['&doJson'], getRequestJson, ['requestJson']],
+  //some actions are only valid under certain states, like the &arg enable..
+
+  [['&doJson', 'request'], getRequestJson, ['requestJson']],
   [['&doJson', 'requestJson', 'sessionId'], get, ['sessionID']],
+  [['&doDelete', 'request'], getRequestJson, ['requestJson']],
+  [['&doDelete', 'requestJson', 'key'], get, ['sessionKey']],
 
-  [['&doDelete'], getRequestJson, ['requestJson']],
 
+  [['&doJson' || '&doDelete', 'request'], getRequestJson, ['requestJson']],
+  [['&doJson', 'requestJson', 'sessionId'], get, ['sessionID']],
+  [['&doDelete', 'requestJson', 'key'], get, ['sessionKey']],
 
   [['request', '"headers.cookies"'], get, ['cookies']],
   [['cookies', '"sessionIDJwtCookie"'], getCookieValue, ['jwtCookie']],
@@ -213,7 +219,12 @@ const actions = [
   [['&doDelete', 'request', 'PREVIOUS_RESULTS'], doDelete, ['responseBody']],
   [['&doGetsessions', 'userID', 'PREVIOUS_RESULTS'], doGetsessions, ['responseBody']],
 
-  [['responseBody', 'headers'], makeResponse, ['response']]
+  [['responseBody', 'headers'], makeResponse, ['response']],
+
+  //todo this is about logging mostly, this is something we need to have a better plan for, but I think it is operator level.
+  [['*badUrl', '*badAction', '*invalidAction', '*invalidJwtCookie', '*invalidJwtObj', '*otherErrors???'], make404, ['response']],
+  [['*badUrl', '*badAction', '*invalidAction', '*invalidJwtCookie', '*invalidJwtObj', '*otherErrors???'], someKindOfErrorLogging, []],
+  //todo errors!!! yes
 ];
 
 

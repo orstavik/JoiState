@@ -1,4 +1,4 @@
-import {JoiStateResult} from "../src/v3/statemachine";
+import {JoiStateResult} from "../v3/statemachine";
 
 const link = "https://raw.githubusercontent.com/Halochkin/Cloudflare/master/StateManagement(TypingRacerApp)";
 //todo add as global variable
