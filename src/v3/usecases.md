@@ -39,33 +39,34 @@ Optional arguments are created using compilation.
 ```
 [*a, b, *c], fun, [d, e]
   =>
-[a, b, c], fun, [d, e]
-[a, b,], fun, [d, e]
-[, b, c], fun, [d, e]
-[, b,], fun, [d, e]
+[a, b, c], rename, [_ready_a, _ready_b, _ready_c]
+[a, b, undefined], rename, [_ready_a, _ready_b, _ready_c]
+[undefined, b, c], rename, [_ready_a, _ready_b, _ready_c]
+[undefined, b, undefined], rename, [_ready_a, _ready_b, _ready_c]
+[_ready_a, _ready_b, _ready_c], fun, [d, e]
+```
+
+Special case: If all arguments are optional, the action will only be invoked when the one of the optional arguments is set. If none of the optional arguments are set, the action will not be invoked.
+
+```
+[*a, *b, *c], fun, [d]
+  =>
+[a, b, c], rename, [_ready_a, _ready_b, _ready_c]
+[undefined, b, c], rename, [_ready_a, _ready_b, _ready_c]
+[a, undefined, c], rename, [_ready_a, _ready_b, _ready_c]
+[a, b, undefined], rename, [_ready_a, _ready_b, _ready_c]
+[undefined, undefined, c], rename, [_ready_a, _ready_b, _ready_c]
+[undefined, b, undefined], rename, [_ready_a, _ready_b, _ready_c]
+[a, undefined, undefined], rename, [_ready_a, _ready_b, _ready_c]
+////         the below line is !!not!! included by the compiler.
+////  [undefined, undefined, undefined], rename, [_ready_a, _ready_b, _ready_c]
+////         the above line is !!not!! included by the compiler.
+[_ready_a, _ready_b, _ready_c], fun, [d]
 ```
 
 Example:
 
-```
-[a, b, *base], add, [sum, error]
->
-[8,8,2], add, [sum=10000]
-[8,8], add, [sum=16]
-[8,unset,2], add, [unset, unset]  
-    //this action is still not invoked. It will not be invoked until b is ready. 
-```
-
-If all arguments are optional, the action will only be invoked when the first optional argument is set. If none of the optional arguments are set, the action will not be invoked.
-
-```
-[*error1, *error2], log, []
-  =>
-[error1, error2], log, [_log_has_run]
-[error1], log, [_log_has_run]
-[error2], log, [_log_has_run]
-                             //[], log, [_log_has_run] //this alternative is not added
-```
+todo 
 
 ## Dependency arguments: `&arg`
 
@@ -94,25 +95,16 @@ Example:
 
 > `*` = optional. The action will still run if the argument is missing; the action will still run and update *its other outputs* even when an optional output has been set.
 
-If you want to invoke and set the results from an action, even when one of its output states has already set, then you must mark this output state as optional with the prefix `*`.
-
-The optional output works for *both* sync and async actions. However, if you have an async action, and use optional outputs, then you **must explicitly list all the possible output states for that action**. If not, the return value of the async action can be blocked and not added to the state.
+If you want to invoke and set the results from an action, even when one of its output states has already set, then you must mark this output state as optional with the prefix `*`. The optional output works for *both* sync and async actions.
 
 This is achieved using the following compilation. 
 
 ```
 [a, b, c], fun, [*d, e, *f]
   =>
-[a, b, c], fun, [d, e, f]     
-[a, b, c], emptyFun, [_invoke, d, e, f]
-[a, b, c], fun, [d, e, _ignore_f, _invoke]
-[a, b, c], emptyFun, [_invoke, d, e]
-[a, b, c], fun, [_ignore_d, e, f, _invoke]
-[a, b, c], emptyFun, [_invoke, e, f]
-[a, b, c], fun, [_ignore_d, e, _ignore_f, _invoke]
-[a, b, c], emptyFun, [_invoke, e]
-
-function emptyFun(){ return undefined;}
+[a, b, c], fun, [_temp_d, e, _temp_f]     
+[_temp_d], rename, [d]
+[_temp_f], rename, [f]
 ```
 
 ## example: plusMinusMultiplyDivide
@@ -140,30 +132,9 @@ async function asyncPMMD(...nums){
 ```
 [a, b], plusMinusMultiplyDivide, [*sum, sum2, product, *quotient]
   =>
-[a, b], plusMinusMultiplyDivide, [sum, sum2, product, quotient, _invoke]     
-[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]
-[a, b], plusMinusMultiplyDivide, [sum, sum2, product, _ignore_quotient, _invoke]
-[a, b], emptyFun, [_invoke, sum, sum2, product]
-[a, b], plusMinusMultiplyDivide, [_ignore_sum, sum2, product, quotient, _invoke]
-[a, b], emptyFun, [_invoke, sum2, product, quotient]
-[a, b], plusMinusMultiplyDivide, [_ignore_sum, sum2, product, _ignore_quotient, _invoke]
-[a, b], emptyFun, [_invoke, sum2, product]
-```
-
-
-Async example when output variable is set:
-
-```
-[a=2, b=2], asyncPMMD, [*sum=42, sum2, product, *quotient]
-  =>
-[a=2, b=2], asyncPMMD, [sum, sum2, product, quotient, _invoke]         //sum -x-
-[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]              //sum -x-
-[a=2, b=2], asyncPMMD, [sum, sum2, product, _ignore_quotient, _invoke] //sum -x-
-[a=2, b=2], emptyFun, [_invoke, sum, sum2, product]                    //sum -x-
-[a=2, b=2], asyncPMMD, [_ignore_sum=4, sum2=0, product=4, quotient=1, _invoke] //ok
-[a=2, b=2], emptyFun, [_invoke=undefined, sum2, product, quotient]             //ok
-[a=2, b=2], asyncPMMD, [_ignore_sum, sum2, product, _ignore_quotient, _invoke] //_invoke -x-
-[a=2, b=2], emptyFun, [_invoke, sum2, product] //_invoke -x-
+[a, b], plusMinusMultiplyDivide, [_tmp_sum, sum2, product, _tmp_quotient]     
+[_tmp_sum], rename, [sum]
+[_tmp_quotient], rename, [quotient]
 ```
 
 Sync example when output variable is set:
@@ -171,21 +142,26 @@ Sync example when output variable is set:
 ```
 [a=2, b=2], pmmd, [*sum=42, sum2, product, *quotient]
   =>
-[a=2, b=2], pmmd, [sum, sum2, product, quotient, _invoke]         //sum -x-
-[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]         //sum -x-
-[a=2, b=2], pmmd, [sum, sum2, product, _ignore_quotient, _invoke] //sum -x-
-[a=2, b=2], emptyFun, [_invoke, sum, sum2, product]               //sum -x-
-[a=2, b=2], pmmd, [_ignore_sum=4, sum2=0, product=4, quotient=1, _invoke] //ok
-[a=2, b=2], emptyFun, [_invoke=undefined, sum2, product, quotient]        //sum2 -x-
-[a=2, b=2], pmmd, [_ignore_sum, sum2, product, _ignore_quotient, _invoke] //sum2 -x-
-[a=2, b=2], emptyFun, [_invoke, sum2, product]                            //sum2 -x-
+[a=2, b=2], pmmd, [_tmp_sum=4, sum2=0, product=4, _tmp_quotient=1]
+[_tmp_sum], rename, [sum]               //--x-- because sum is already set
+[_tmp_quotient=1], rename, [quotient=1] //is set
+```
+
+Async example when output variable is set. `asyncPMMD` will not set the _tmp_values if something sets the sum2 or product while asyncPMMD is running.
+
+```
+[a=2, b=2], asyncPMMD, [*sum=42, sum2, product, *quotient]
+  =>
+[a=2, b=2], asyncPMMD, [_tmp_sum=4, sum2=0, product=4, _tmp_quotient=1]
+[_tmp_sum], rename, [sum]               //--x-- because sum is already set
+[_tmp_quotient=1], rename, [quotient=1] //is set
 ```
 
 ## Dependency output: `&output`
 
 > `&` = dependency. The action will not run if the dependency argument is missing, or if the dependency output is set, but it will not use the dependency as neither output nor input.
 
-If you want to prevent an action from running if a specific state is set, then add that state at the end of the output list as a dependency output: `&output`.
+If you want to prevent an action from running if a specific state is set, then add that state at the end of the output list as a dependency output: `&output`. The dependency output should be at the end, so as not to cause conflict for the positioning of the other output states.
 
 This is achieved using the following compilation.
 
@@ -195,6 +171,8 @@ This is achieved using the following compilation.
 [a, b, c], rename, [_rename_a, _rename_b, _rename_c, e]
 [_rename_a, _rename_b, _rename_c], fun, [d]
 ```
+
+As the rename function will never populate the extra output value, then there is no risk of `e` ever being set when it is not blocking the `fun`. 
 
 ## Usecase !cache:
 
