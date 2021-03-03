@@ -1,10 +1,10 @@
 # WhatIs: an action?
 
-1. An action is a function that produce several return values. An action takes an array of input states and convert them into an array of output states.
-2. The action function is free to decide which output states it populates. 
-3. Commonly, an action produce only two return value: the first output state is the normal output of the function, and the second output value is any error thrown from the function. 
-4. But, action functions can also populate select output states, such as both 1 and 3, but not 2 and 4 (in JS: `result = ['one', , 3]` where `result[1] === undefined && !(1 in result)`; this is different from `result = ['one', undefined, 3]` where output state 2 is set to `undefined`).
-5. Actions can be async.
+1. An action is a function that produce several return values (output states). An action takes an array of input states and create an array of output states.
+2. The action is free to decide which output states it populates.
+	1. Commonly, an action produce only one of two return values: when the action function works as assumed and creates a normal return value, the first output state is populated; if the function fails, the second output state is populated with the error.
+	2. However, an action can also populate several, selected output states. For example, an action can set output states 1 and 3 at the same time, while keeping output states 2 and 4 `unset`. (in JS: `result = ['one', /*unset*/, 3]` where `result[1] === undefined && !(1 in result)`; this is different from `result = ['one', undefined, 3]` where output state 2 is *set* to `undefined` and `result[1] === undefined && (1 in result)`).
+3. Actions can be async.
 
 Example:
 
@@ -25,23 +25,24 @@ Example:
 3. The state machine tries to run each action in the order they are listed. Whenever an action is invoked, the state machine tries to find the next action from the top of the list again.
 4. The state machine only invokes an action when all its input states are available.
 5. The state machine cancels an action when one of its listed output states have already been set.
-6. Once an action completes, the state machine will populate the actions output properties in the state machine's state.
-7. If an async action completes, and some other action has populated one of that action's set output states, then none of the async actions properties will be set/all of the action's output properties will be dropped.  
+6. When an action completes, the state machine copies the action's return values to the listed output states in the state machine's cycle.
+7. If an async action completes, and some other action has populated one of the output states that the async action returns, then none of the async actions return values will be set in the state machine cycle/all of the action's output states will be dropped.
 8. A state machine cycle begins when the state machine is passed an initial set of state properties.
-9. A state machine cycle ends when there are a) no more actions that can be invoked and b) no incomplete async actions awaited.   
+9. A state machine cycle ends when there are a) no more actions that can be invoked AND b) no incomplete async actions awaited.
 
 ## Optional arguments: `*arg`
 
-If you want to run an action, even when one of its input states is unset, then use the *argument that parameter.
+If you want to run an action, even when one of its input states is unset, then prefix that parameter with `*`.
 
-Optional arguments are created using compilation. 
+Optional arguments are created using compilation.
+
 ```
 [*a, b, *c], fun, [d, e]
   =>
 [a, b, c], fun, [d, e]
-[a, b, unset], fun, [d, e]
-[unset, b, c], fun, [d, e]
-[unset, b, unset], fun, [d, e]
+[a, b,], fun, [d, e]
+[, b, c], fun, [d, e]
+[, b,], fun, [d, e]
 ```
 
 Example:
@@ -55,22 +56,25 @@ Example:
     //this action is still not invoked. It will not be invoked until b is ready. 
 ```
 
-If all arguments are optional, the action will only be invoked when the first optional argument is set. If none of the optional arguments is set, the action will not be invoked.
+If all arguments are optional, the action will only be invoked when the first optional argument is set. If none of the optional arguments are set, the action will not be invoked.
 
 ```
 [*error1, *error2], log, []
   =>
+[error1, error2], log, [_log_has_run]
 [error1], log, [_log_has_run]
 [error2], log, [_log_has_run]
+                             //[], log, [_log_has_run] //this alternative is not added
 ```
 
 ## Dependency arguments: `&arg`
 
-A dependency argument is an argument that the action must wait until is set before it can run, but the `&arg` itself is not passed to the action function. 
+A dependency argument is an argument that the action must wait until is set before it can run, but the `&arg` itself is not passed to the action function.
 
-If you want an action not to run before a certain input state is set, but you do not want to pass that input state into the action function, then prefix the argument with `&`.
+If you want an action wait until a certain input state is set, but you do not want to pass that input state into the action function, then prefix the argument with `&`.
 
 This is achieved using the following compilation.
+
 ```
 [&a, b, c], fun, [d, e]
   =>
@@ -92,22 +96,89 @@ Example:
 
 If you want to invoke and set the results from an action, even when one of its output states has already set, then you must mark this output state as optional with the prefix `*`.
 
-This is achieved using the following compilation.
+The optional output works for *both* sync and async actions. However, if you have an async action, and use optional outputs, then you **must explicitly list all the possible output states for that action**. If not, the return value of the async action can be blocked and not added to the state.
+
+This is achieved using the following compilation. 
+
 ```
-[a, b, c], fun, [*d, e]
+[a, b, c], fun, [*d, e, *f]
   =>
-[a, b, c], fun, [d, e]
-[a, b, c], fun, [_action_id_ignore, e]
+[a, b, c], fun, [d, e, f]     
+[a, b, c], emptyFun, [_invoke, d, e, f]
+[a, b, c], fun, [d, e, _ignore_f, _invoke]
+[a, b, c], emptyFun, [_invoke, d, e]
+[a, b, c], fun, [_ignore_d, e, f, _invoke]
+[a, b, c], emptyFun, [_invoke, e, f]
+[a, b, c], fun, [_ignore_d, e, _ignore_f, _invoke]
+[a, b, c], emptyFun, [_invoke, e]
+
+function emptyFun(){ return undefined;}
 ```
 
-Example: functions that can do text calculations.
+## example: plusMinusMultiplyDivide
+
+```javascript
+function pmmd(...nums) {
+  let a, b, c, d;
+  a = b = c = d = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    let x = nums[i];
+    a += x;
+    b -= x;
+    c *= x;
+    d /= x;
+  }
+  return [a, b, c, d, 'hello'];
+}
+
+async function asyncPMMD(...nums){
+  await new Promise(r => setTimeout(r, 10));
+  return pmmd(...nums);
+}
+```
 
 ```
-[one, two], divide, [quotient, *error]
-[three, four], multiply, [product, *error]
->
-['four', 'zero'], divide, [quotient=unset, error='"zero" is not a valid divisor']
-['tres', 'quatro'], multiply, [product='doce']
+[a, b], plusMinusMultiplyDivide, [*sum, sum2, product, *quotient]
+  =>
+[a, b], plusMinusMultiplyDivide, [sum, sum2, product, quotient, _invoke]     
+[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]
+[a, b], plusMinusMultiplyDivide, [sum, sum2, product, _ignore_quotient, _invoke]
+[a, b], emptyFun, [_invoke, sum, sum2, product]
+[a, b], plusMinusMultiplyDivide, [_ignore_sum, sum2, product, quotient, _invoke]
+[a, b], emptyFun, [_invoke, sum2, product, quotient]
+[a, b], plusMinusMultiplyDivide, [_ignore_sum, sum2, product, _ignore_quotient, _invoke]
+[a, b], emptyFun, [_invoke, sum2, product]
+```
+
+
+Async example when output variable is set:
+
+```
+[a=2, b=2], asyncPMMD, [*sum=42, sum2, product, *quotient]
+  =>
+[a=2, b=2], asyncPMMD, [sum, sum2, product, quotient, _invoke]         //sum -x-
+[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]              //sum -x-
+[a=2, b=2], asyncPMMD, [sum, sum2, product, _ignore_quotient, _invoke] //sum -x-
+[a=2, b=2], emptyFun, [_invoke, sum, sum2, product]                    //sum -x-
+[a=2, b=2], asyncPMMD, [_ignore_sum=4, sum2=0, product=4, quotient=1, _invoke] //ok
+[a=2, b=2], emptyFun, [_invoke=undefined, sum2, product, quotient]             //ok
+[a=2, b=2], asyncPMMD, [_ignore_sum, sum2, product, _ignore_quotient, _invoke] //_invoke -x-
+[a=2, b=2], emptyFun, [_invoke, sum2, product] //_invoke -x-
+```
+
+Sync example when output variable is set:
+
+```
+[a=2, b=2], pmmd, [*sum=42, sum2, product, *quotient]
+  =>
+[a=2, b=2], pmmd, [sum, sum2, product, quotient, _invoke]         //sum -x-
+[a, b], emptyFun, [_invoke, sum, sum2, product, quotient]         //sum -x-
+[a=2, b=2], pmmd, [sum, sum2, product, _ignore_quotient, _invoke] //sum -x-
+[a=2, b=2], emptyFun, [_invoke, sum, sum2, product]               //sum -x-
+[a=2, b=2], pmmd, [_ignore_sum=4, sum2=0, product=4, quotient=1, _invoke] //ok
+[a=2, b=2], emptyFun, [_invoke=undefined, sum2, product, quotient]        //sum2 -x-
+[a=2, b=2], pmmd, [_ignore_sum, sum2, product, _ignore_quotient, _invoke] //sum2 -x-
+[a=2, b=2], emptyFun, [_invoke, sum2, product]                            //sum2 -x-
 ```
 
 ## Dependency output: `&output`
@@ -117,6 +188,7 @@ Example: functions that can do text calculations.
 If you want to prevent an action from running if a specific state is set, then add that state at the end of the output list as a dependency output: `&output`.
 
 This is achieved using the following compilation.
+
 ```
 [a, b, c], fun, [d, &e]
   =>
@@ -154,7 +226,6 @@ The reuse function will remember only the last outputs it saw. This can be adjus
 
 The usecases cache+reuse should cover the need for minimal change, and then by using the cache function on both observers and computers, the only call on change occurs.
 
-
 ## Usecase @utomatic unit tests:
 
 We need to access the function text from the operator function. A functions[funName] that returns a textual description of the text must be made available.
@@ -172,10 +243,11 @@ The "fun" is the name of the function which can be used to get the source of the
 
 The unit test function can keep a cache of previous results, so not to post tests to server redundantly. Then, the test is posted to a url. This web server will save all tests as orange. Then you go in, review them, and mark them green or red.
 
-To create the unit test, the unitTest function needs: 
+To create the unit test, the unitTest function needs:
+
 1. The input parameters. These should be Json-able.
 2. The outputs. These should be Json-able.
-3. The import statement for the function. This import statement should uniquely identify the function, and give the user a good overview of it. The funName in the action is not useful, only the import statement is useful here. 
+3. The import statement for the function. This import statement should uniquely identify the function, and give the user a good overview of it. The funName in the action is not useful, only the import statement is useful here.
 
 ## Usecase ML:
 
@@ -195,7 +267,7 @@ The learn functions will pass the data to either a server or a function in the b
 
 ## Usecase deepfreeze:
 
-we want one or more output states from an action to be frozen. 
+we want one or more output states from an action to be frozen.
 
 ```
 [a], ¤fun, [¤b, c]
@@ -206,7 +278,6 @@ we want one or more output states from an action to be frozen.
 
 ## Usecase verify mutations:
 
-
 ## Usecase Log:
 
     1. Log a set of properties of the state using an action. Use &params to control timing. Log(x, y, & z)
@@ -214,6 +285,7 @@ we want one or more output states from an action to be frozen.
     2. Log each state change. Impossible. Must be done by adding different log action for different states.
 
 You need to log the state of the machine. What you usually need here is:
+
 1. the states that you desire to log
 2. the situation in the actions list. The actionslist with the trace.
 3. You could also include the declarations. If you do so, then automatic unit tests could be produced by the log alone.
@@ -223,6 +295,7 @@ We would like to do logging when certain states occur. If there is an error, the
 We would also like to filter these states, and that we do as regular state filters. We check an equals or something else in the state to reduce the number of states that are called. This is simple enough to do with normal state filtering mechanisms. This makes monitoring a slice of all interactions much simpler.
 
 So, the logging is essentially a property on the output states. We need to listen for certain output states to occur:
+
 1. some of these output states are really important, they must be logged at once.
 2. some of these output states are less important, they should all be triggered, but then logged later.
 
@@ -230,9 +303,7 @@ When we log a function, we need all the input states, and the desired output sta
 
 So, we then get the machine learning and auto unit test background.
 
-
 But, we would like to send out these logs as few times as possible (not 5 times per request, but only 1 if possible). And we would like these logs to be sent out safely, so that no timeout will prevent them from occuring.
-
 
 The log is a state snapshot. A selection of the state. These snapshots might be necessary to do at different times, just to be sure we get them, but if we know we have time, or if we don't care if it is done late, we can do it as just an observer.
 
