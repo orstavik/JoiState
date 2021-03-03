@@ -1,10 +1,10 @@
 # WhatIs: an action?
 
-1. An action takes set of input states and produce a set of output states.
-2. All (regular) input states must be set.
-3. The action chooses itself how many of its output states it will populate. Most often, an action will produce only one output state, the first.
-4. If one of the (regular) output states is set, then the action will be canceled.
-5. An output set can only be set once. If an async action resolves, and one of its output states has already been set (ie. is no longer unset as it was when the async action was invoked), then none of the return values will be set by the async action.
+1. An action is a function that produce several return values. An action takes an array of input states and convert them into an array of output states.
+2. The action function is free to decide which output states it populates. 
+3. Commonly, an action produce only two return value: the first output state is the normal output of the function, and the second output value is any error thrown from the function. 
+4. But, action functions can also populate select output states, such as both 1 and 3, but not 2 and 4 (in JS: `result = ['one', , 3]` where `result[1] === undefined && !(1 in result)`; this is different from `result = ['one', undefined, 3]` where output state 2 is set to `undefined`).
+5. Actions can be async.
 
 Example:
 
@@ -12,17 +12,29 @@ Example:
 [dividend, divisor], divide, [quotient, error]
 >
 [1, 2], divide, [quotient=0.5]
-[1, 0], divide, [quotient=NaN]
+[1, 10], divide, [quotient=0.5]  
 [1, 'bob'], divide, [ , error='TypeError: "bob" is not a valid divisor.']
 ```
 
 `[1, 0], divide, [NaN]` could also choose to return the output as an Error.
 
+## WhatIs: a state machine?
+
+1. A state machine is a list (an array) of actions.
+2. The state machine will run each action only once per cycle.
+3. The state machine tries to run each action in the order they are listed. Whenever an action is invoked, the state machine tries to find the next action from the top of the list again.
+4. The state machine only invokes an action when all its input states are available.
+5. The state machine cancels an action when one of its listed output states have already been set.
+6. Once an action completes, the state machine will populate the actions output properties in the state machine's state.
+7. If an async action completes, and some other action has populated one of that action's set output states, then none of the async actions properties will be set/all of the action's output properties will be dropped.  
+8. A state machine cycle begins when the state machine is passed an initial set of state properties.
+9. A state machine cycle ends when there are a) no more actions that can be invoked and b) no incomplete async actions awaited.   
+
 ## Optional arguments: `*arg`
 
 If you want to run an action, even when one of its input states is unset, then use the *argument that parameter.
 
-This is achieved using the following compilation. 
+Optional arguments are created using compilation. 
 ```
 [*a, b, *c], fun, [d, e]
   =>
@@ -41,6 +53,15 @@ Example:
 [8,8], add, [sum=16]
 [8,unset,2], add, [unset, unset]  
     //this action is still not invoked. It will not be invoked until b is ready. 
+```
+
+If all arguments are optional, the action will only be invoked when the first optional argument is set. If none of the optional arguments is set, the action will not be invoked.
+
+```
+[*error1, *error2], log, []
+  =>
+[error1], log, [_log_has_run]
+[error2], log, [_log_has_run]
 ```
 
 ## Dependency arguments: `&arg`
