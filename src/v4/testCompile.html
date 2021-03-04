@@ -1,0 +1,78 @@
+<script type="module">
+  import {compile} from "./compiler.js";
+
+  function test(input, expect) {
+    const expectString = JSON.stringify(expect);
+    let result = JSON.stringify(compile(input));
+    let equal = result === expectString;
+    console.log(equal);
+    if (!equal)
+      console.log(result);
+  }
+
+  test(
+    [
+      [["a", "b", "c"], "fun", ["*d", "e", "*f"]]
+    ],
+    [
+      ["0_*2_0", ["a", "b", "c"], "fun", ["_d_*2", "e", "_f_*2"]],
+      ["0_*2_1", ["_d_*2"], "rename", ["d"]],
+      ["0_*2_2", ["_f_*2"], "rename", ["f"]]
+    ]
+  );
+
+  test(
+    [
+      [["a", "b", "c"], "fun", ["&d", "e", "&f"]]
+    ],
+    [
+      ["0_&2_1", ["a", "b", "c", "d", "f"], "rename", ["_a_&2", "_b_&2", "_c_&2"]],      //todo name for made states
+      ["0_&2_2", ["_a_&2", "_b_&2", "_c_&2"], "fun", [null, "e"]]
+    ]
+  );
+
+  //[&a, b, c], fun, [d, e]
+  //[b, c, a], rename, [_renamed_b, _renamed_c]
+  //[_renamed_b, _renamed_c], fun, [d, e]
+  //todo the &a is stripped from the argument list, thus shifting the sequence of the other args. It might be a problem.
+  test(
+    [
+      [["&a", "b", "c"], "fun", ["d", "e"]]
+    ],
+    [
+      ["0_&_1", ["b", "c", "a"], "rename", ["_renamed_b", "_renamed_c"]],  //todo name for made states.
+      ["0_&_2", ["_renamed_b", "_renamed_c"], "fun", ["d", "e"]]
+    ]);
+
+  test(
+    [
+      [["*a", "*b", "*c"], "fun", ["d"]]
+    ],
+    [
+      ["0_*_0", ["a"], "rename", ["_ready_fun_*_0"]],
+      ["0_*_1", ["b"], "rename", ["_ready_fun_*_0"]],
+      ["0_*_2", ["c"], "rename", ["_ready_fun_*_0"]],
+      ["0_*_3a", ["a", "_ready_fun_*_0"], "rename", ["_a_*"]],           //todo must have id for the rename here..
+      ["0_*_3b", [null, "_ready_fun_*_0"], "rename", ["_a_*"]],
+      ["0_*_4a", ["b", "_ready_fun_*_0"], "rename", ["_b_*"]],
+      ["0_*_4b", [null, "_ready_fun_*_0"], "rename", ["_b_*"]],
+      ["0_*_5a", ["c", "_ready_fun_*_0"], "rename", ["_c_*"]],
+      ["0_*_5b", [null, "_ready_fun_*_0"], "rename", ["_c_*"]],
+      [0, ["_a_*", "_b_*", "_c_*"], "fun", ["d"]]]
+  );
+
+  test(
+    [
+      [["*a", "b", "*c", 12], "fun", ["d", "e"]]
+    ],
+    [
+      ["0_*_0", ["b", 12], "rename", ["_ready_fun_*_0"]],
+      ["0_*_1a", ["a", "_ready_fun_*_0"], "rename", ["_a_*"]],           //todo must have id for the rename here..
+      ["0_*_1b", [null, "_ready_fun_*_0"], "rename", ["_a_*"]],
+      ["0_*_2a", ["c", "_ready_fun_*_0"], "rename", ["_c_*"]],
+      ["0_*_2b", [null, "_ready_fun_*_0"], "rename", ["_c_*"]],
+      [0, ["_a_*", "b", "_c_*", 12], "fun", ["d", "e"]]
+    ]
+  );
+
+</script>

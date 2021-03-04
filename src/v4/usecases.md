@@ -39,11 +39,11 @@ Optional arguments are created using compilation.
 ```
 [*a, b, *c, 12], fun, [d, e]
   =>
-[undefined, b, 12], rename, [_ready_fun]
+[b, 12], rename, [_ready_fun]
 [a, _ready_fun], rename, [_ready_a]
-[_ready_fun], rename, [_ready_a]
+[undefined, _ready_fun], rename, [_ready_a]
 [c, _ready_fun], rename, [_ready_c]
-[_ready_fun], rename, [_ready_c]
+[undefined, _ready_fun], rename, [_ready_c]
 [_ready_a, b, _ready_c, 12], fun, [d, e]
 ```
 
@@ -60,8 +60,11 @@ Optional OR is created using compilation.
 [b], rename, [_ready_fun]
 [c], rename, [_ready_fun]
 [a, _ready_fun], rename, [_ready_a]
+[undefined, _ready_fun], rename, [_ready_a]
 [b, _ready_fun], rename, [_ready_b]
+[undefined, _ready_fun], rename, [_ready_b]
 [c, _ready_fun], rename, [_ready_c]
+[undefined, _ready_fun], rename, [_ready_c]
 [_ready_a, _ready_b, _ready_c], fun, [d]
 ```
 
@@ -80,7 +83,7 @@ This is achieved using the following compilation.
 ```
 [&a, b, c], fun, [d, e]
   =>
-[a, b, c], rename, [_renamed_a, _renamed_b, _renamed_c]
+[b, c, a], rename, [_renamed_b, _renamed_c]
 [_renamed_b, _renamed_c], fun, [d, e]
 ```
 
