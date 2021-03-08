@@ -49,5 +49,46 @@ describe('builtins', function () {
       if_a: 'bob',
       if_c: 'bob',
     });
+        // clear .something
+    state.reduce('something', '');
+    expect(state.state).to.deep.equals({
+      a: "bob",
+      b: "alice",
+      c: "bob",
+      else: "",
+      something: ""
+    });
+
+    state.reduce('if_a', 'bob');
+    expect(state.state.if_a).to.deep.equals('bob');
+    
+    state.reduce('a', 'bob2');
+    expect(state.state).to.deep.equals({
+      a: "bob2",
+      b: "alice",
+      c: "bob",
+      else: "",  // why it is empty string?
+      if_a: "bob",
+      something: ""
+    }); 
+    state.reduce('something', 'bob');
+    expect(state.state).to.deep.equals({
+      a: "bob2",
+      b: "alice",
+      c: "bob",
+      if_a: "bob",
+      if_c: "bob",
+      something: "bob"
+    });
+    state.reduce('else', 'hello');
+    expect(state.state).to.deep.equals({
+      a: "bob2",
+      b: "alice",
+      c: "bob",
+      else: "hello",
+      if_a: "bob",
+      if_c: "bob",
+      something: "bob"
+    });
   });
 });
